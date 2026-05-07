@@ -22,10 +22,10 @@ default_stages: [pre-commit]
 # Skip generated/vendored content; ruff/tsc/etc. should never see these.
 exclude: |
   (?x)^(
-      connection-dashboard/frontend/dist/.*|
-      connection-dashboard/frontend/node_modules/.*|
-      connection-dashboard/\.venv/.*|
-      connection-dashboard/data/.*|
+      frontend/dist/.*|
+      frontend/node_modules/.*|
+      \.venv/.*|
+      data/.*|
       .*\.min\.(js|css)|
       .*package-lock\.json
   )$
@@ -44,7 +44,7 @@ repos:
       - id: check-yaml
       - id: check-toml
       - id: check-json
-        exclude: ^connection-dashboard/frontend/tsconfig.*\.json$  # tsconfig allows comments
+        exclude: ^frontend/tsconfig.*\.json$  # tsconfig allows comments
       - id: check-case-conflict
       - id: detect-private-key
       - id: mixed-line-ending
@@ -58,9 +58,9 @@ repos:
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
-        files: ^connection-dashboard/.*\.py$
+        files: ^(backend|tests|scripts)/.*\.py$
       - id: ruff-format
-        files: ^connection-dashboard/.*\.py$
+        files: ^(backend|tests|scripts)/.*\.py$
 
   # ---------- TypeScript: project's own tsc (no extra download) ----------
   - repo: local
@@ -69,7 +69,7 @@ repos:
         name: TypeScript type-check (frontend)
         language: system
         entry: python scripts/typecheck_frontend.py
-        files: ^connection-dashboard/frontend/.*\.(ts|tsx)$
+        files: ^frontend/.*\.(ts|tsx)$
         pass_filenames: false
         # tsc must see the whole project graph, so we don't pass filenames.
 
@@ -99,7 +99,7 @@ repos:
   - repo: local
     hooks:
       - id: pytest-backend
-        name: pytest (connection-dashboard backend)
+        name: pytest (backend)
         language: system
         entry: python scripts/run_pytest.py
         pass_filenames: false

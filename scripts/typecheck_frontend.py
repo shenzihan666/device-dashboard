@@ -17,13 +17,12 @@ Behavior:
 from __future__ import annotations
 
 import os
-import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-FRONTEND = REPO_ROOT / "connection-dashboard" / "frontend"
+FRONTEND = REPO_ROOT / "frontend"
 
 
 def _resolve_tsc() -> Path | None:
@@ -44,7 +43,7 @@ def main() -> int:
     if tsc is None:
         print(
             "[typecheck-frontend] node_modules missing — run `npm install` in "
-            "connection-dashboard/frontend to enable type-checking. Skipping.",
+            "frontend/ to enable type-checking. Skipping.",
         )
         return 0
 

@@ -1,8 +1,8 @@
-"""Run pytest for the connection-dashboard backend, cross-platform.
+"""Run pytest for the backend, cross-platform.
 
 Invoked by the `pytest-backend` pre-push hook. Resolves pytest in this order:
 
-  1. <project>/.venv (Windows: Scripts/, POSIX: bin/)
+  1. <repo>/.venv (Windows: Scripts/, POSIX: bin/)
   2. Whatever `python -m pytest` resolves on PATH
 
 If neither is available, prints a setup hint and exits non-zero so the push is
@@ -19,8 +19,8 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-PROJECT = REPO_ROOT / "connection-dashboard"
-VENV = PROJECT / ".venv"
+VENV = REPO_ROOT / ".venv"
+TESTS_DIR = REPO_ROOT / "tests"
 
 
 def _venv_pytest() -> Path | None:
@@ -32,8 +32,8 @@ def _venv_pytest() -> Path | None:
 
 
 def main() -> int:
-    if not PROJECT.is_dir():
-        print(f"[pytest-backend] project not found at {PROJECT}; nothing to test.")
+    if not TESTS_DIR.is_dir():
+        print(f"[pytest-backend] tests dir not found at {TESTS_DIR}; nothing to test.")
         return 0
 
     pytest_bin = _venv_pytest()
@@ -44,7 +44,6 @@ def main() -> int:
     else:
         print(
             "[pytest-backend] pytest not found. Install dev deps:\n"
-            "    cd connection-dashboard\n"
             "    pip install -e .[dev]\n"
             "  or activate the project venv before pushing.",
             file=sys.stderr,
@@ -52,7 +51,7 @@ def main() -> int:
         return 1
 
     cmd += ["-q", "tests"]
-    return subprocess.call(cmd, cwd=PROJECT)
+    return subprocess.call(cmd, cwd=REPO_ROOT)
 
 
 if __name__ == "__main__":

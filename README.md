@@ -1,104 +1,105 @@
-# welike / data-information
+# WeCom AI Connection Dashboard
 
-Workspace root for WeCom data-platform tooling.
+Real-time dashboard tracking WeCom client (enterprise WeChat) connections to AI servers.
 
-## Sub-projects
+Polls Grafana Loki (`wecom-sidecar-logs`) every 10 seconds, parses structured log lines into connection events, persists to SQLite, and pushes updates via WebSocket to a browser SPA with:
 
-| Path | Stack | Purpose |
+- **Live workflow-style graph** — three tiers as card nodes: AI Server / PC Host / Device (serial), rendered with [React Flow](https://reactflow.dev/) (`@xyflow/react`), dot background, controls, and minimap
+- **View / Edit layout** — default view is read-only; **Edit** enables dragging nodes; positions persist in SQLite via `GET/PUT/DELETE /api/layout`
+- **Event feed** — chronological right-side panel with switch / offline / error events
+- **Timeline scrubber** — replay any past window; drag the scrubber to seek state and events
+
+## Quick start (production)
+
+Build the frontend, then run the API (serves `frontend/dist` when present):
+
+```bash
+cp .env.example .env           # fill in API_TOKEN (required), LANGSMITH_API_KEY (optional)
+pip install -r requirements.txt
+cd frontend && npm install && npm run build && cd ..
+python -m uvicorn backend.main:app --host 0.0.0.0 --port 8090
+```
+
+Open `http://localhost:8090/` in a browser.
+
+## Development (hot reload)
+
+Run backend and Vite dev server in two terminals (Vite proxies `/api` and `/ws` to port 8090):
+
+```bash
+# Terminal A (from repo root)
+python -m uvicorn backend.main:app --host 0.0.0.0 --port 8090
+
+# Terminal B
+cd frontend
+npm install
+npm run dev    # http://localhost:5173
+```
+
+## Configuration (.env)
+
+| Variable | Default | Description |
 |---|---|---|
-| [`connection-dashboard/`](./connection-dashboard) | Python 3.11+ (FastAPI) + React 19 (Vite) | Real-time dashboard tracking WeCom client ↔ AI server connections via Grafana Loki |
+| `API_TOKEN` | *(required)* | Grafana service account token (`glsa_...`) |
+| `GRAFANA_URL` | `https://mynameisi.grafana.net` | Grafana instance |
+| `LOKI_DATASOURCE_UID` | `grafanacloud-logs` | Loki datasource UID |
+| `LANGSMITH_API_KEY` | *(optional)* | Enables "Open in LangSmith" links |
+| `POLL_INTERVAL_S` | `10` | Seconds between Loki polls |
+| `BACKFILL_HOURS` | `24` | Hours of history to load on first start |
+| `OFFLINE_GRACE_S` | `90` | Seconds without activity before flagging device offline |
+
+## REST API (selected)
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/state` | Current graph snapshot (optional `?at=` for replay) |
+| GET | `/api/events` | Recent events |
+| GET | `/api/layout` | Saved node positions `{ positions: [{ node_id, x, y }] }` |
+| PUT | `/api/layout` | Upsert positions (JSON array or single object) |
+| DELETE | `/api/layout` | Clear saved positions (reset to auto-layout) |
+| WS | `/ws/live` | Push `{ type: "event", payload: ... }` in live mode |
+
+## Architecture
+
+```
+Browser (React + Vite)  ←── WebSocket ──→  FastAPI backend  ←── HTTP ──→  Grafana Loki
+         ↕                                        ↕
+  React Flow graph                         SQLite (events + node_positions)
+  event feed + timeline
+```
 
 ## Git hooks (pre-commit)
 
-This repo uses the [pre-commit](https://pre-commit.com/) framework to enforce
-fast, language-agnostic checks on every commit and push. The configuration
-lives in [`.pre-commit-config.yaml`](./.pre-commit-config.yaml).
-
-### One-time setup (new contributors)
+This project's hooks are managed via [pre-commit](https://pre-commit.com/).
+One-time setup:
 
 ```bash
-# 1. Install the pre-commit runner (any one of these works)
-pip install pre-commit          # or:  pipx install pre-commit
-                                # or:  brew install pre-commit
-                                # or:  conda install -c conda-forge pre-commit
-
-# 2. Install the actual git hooks into .git/hooks/
+pip install pre-commit
 pre-commit install --install-hooks
 pre-commit install --hook-type commit-msg
 pre-commit install --hook-type pre-push
 ```
 
-That's it — every `git commit` and `git push` is now guarded.
+What runs:
 
-### What runs when
+- **pre-commit** — `ruff` (lint + format) on staged Python files, `tsc --noEmit`
+  on staged frontend `*.ts`/`*.tsx`, plus general hygiene checks (whitespace,
+  EOF, large-file guard, private-key detection, YAML/TOML/JSON validity).
+- **commit-msg** — Conventional Commits (`feat(scope): subject`).
+- **pre-push** — `pytest tests/` for the backend.
 
-| Stage | Hooks | Typical runtime |
-|---|---|---|
-| **pre-commit** | trailing whitespace · EOF newline · merge-conflict markers · large-file guard · YAML/TOML/JSON validity · case-conflict · private-key detection · LF line endings · **ruff** lint+format (Python) · **tsc --noEmit** (frontend) | < 5 s on staged files |
-| **commit-msg** | [`conventional-pre-commit`](https://github.com/compilerla/conventional-pre-commit) — enforces `type(scope): subject` | < 1 s |
-| **pre-push** | **pytest** (backend test suite) | a few seconds |
-
-Hooks operate on staged files only (except pre-push tests, which always run on
-the whole suite), are CI-friendly, and skip gracefully when optional toolchains
-(`node_modules`, `.venv`) are absent.
-
-### Conventional commit format
-
-Commit messages must match:
-
-```
-<type>(<optional-scope>): <subject>
-```
-
-Allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`,
-`perf`, `ci`, `build`, `revert`.
-
-Examples:
-
-```
-feat(connection-dashboard): add layout reset endpoint
-fix(parser): handle missing serial field
-docs: document hooks setup
-chore(deps): bump ruff to 0.8.6
-```
-
-### Running hooks manually
+Manual run across the whole repo:
 
 ```bash
-pre-commit run --all-files       # everything, on every tracked file
-pre-commit run ruff              # one specific hook id
-pre-commit run --hook-stage pre-push --all-files   # simulate a push
+pre-commit run --all-files
 ```
 
-### Updating hook versions
+Bypass for one operation with `git commit --no-verify` /
+`git push --no-verify`.
 
-```bash
-pre-commit autoupdate            # bumps `rev:` pins in .pre-commit-config.yaml
-```
+## Out of scope (v1)
 
-### Escape hatch
-
-If a hook is blocking you for a legitimate reason (broken third-party tool,
-WIP commit on a feature branch, etc.) you can bypass it for one operation:
-
-```bash
-git commit --no-verify -m "wip: ..."     # skip pre-commit + commit-msg
-git push   --no-verify                   # skip pre-push
-```
-
-Use sparingly — CI will run the same checks and reject non-conforming commits.
-
-### CI
-
-The same configuration runs identically in CI with:
-
-```bash
-pre-commit run --all-files --show-diff-on-failure
-```
-
-Per-hook skipping is supported via the `SKIP` env var, e.g.
-`SKIP=pytest-backend git push`.
-
-## License
-
-Proprietary — internal use only.
+- Authentication / multi-tenant
+- HTTPS (terminate at reverse proxy)
+- Mobile layout
+- Alerting / paging on switches
