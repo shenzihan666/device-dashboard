@@ -70,6 +70,30 @@ Browser (React + Vite)  ←── WebSocket ──→  FastAPI backend  ←─�
   event feed + timeline
 ```
 
+## Git hooks
+
+This project's hooks are managed at the repository root via
+[pre-commit](https://pre-commit.com/). See the
+[root README](../README.md#git-hooks-pre-commit) for full details. TL;DR:
+
+```bash
+pip install pre-commit
+pre-commit install --install-hooks
+pre-commit install --hook-type commit-msg
+pre-commit install --hook-type pre-push
+```
+
+What runs:
+
+- **pre-commit** — `ruff` (lint + format) on staged Python files, `tsc --noEmit`
+  on staged frontend `*.ts`/`*.tsx`, plus general hygiene checks (whitespace,
+  EOF, large-file guard, private-key detection, YAML/TOML/JSON validity).
+- **commit-msg** — Conventional Commits (`feat(scope): subject`).
+- **pre-push** — `pytest tests/` for the backend.
+
+Bypass for one operation with `git commit --no-verify` /
+`git push --no-verify`.
+
 ## Out of scope (v1)
 
 - Authentication / multi-tenant

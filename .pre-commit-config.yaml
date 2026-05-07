@@ -1,0 +1,107 @@
+# Git hooks managed by pre-commit (https://pre-commit.com).
+#
+# One-time setup:
+#   pip install pre-commit       # or: pipx install pre-commit
+#   pre-commit install --install-hooks
+#   pre-commit install --hook-type commit-msg
+#   pre-commit install --hook-type pre-push
+#
+# Manual run:
+#   pre-commit run --all-files
+#
+# Skip hooks for a single commit (use sparingly):
+#   git commit --no-verify
+#   git push   --no-verify
+#
+# CI-friendly: pre-commit auto-skips when SKIP env var lists a hook id, and
+# `pre-commit run --all-files` is the canonical CI invocation.
+
+default_install_hook_types: [pre-commit, commit-msg, pre-push]
+default_stages: [pre-commit]
+
+# Skip generated/vendored content; ruff/tsc/etc. should never see these.
+exclude: |
+  (?x)^(
+      connection-dashboard/frontend/dist/.*|
+      connection-dashboard/frontend/node_modules/.*|
+      connection-dashboard/\.venv/.*|
+      connection-dashboard/data/.*|
+      .*\.min\.(js|css)|
+      .*package-lock\.json
+  )$
+
+repos:
+  # ---------- General hygiene (fast, staged-files-only) ----------
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=500]
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+        exclude: ^connection-dashboard/frontend/tsconfig.*\.json$  # tsconfig allows comments
+      - id: check-case-conflict
+      - id: detect-private-key
+      - id: mixed-line-ending
+        args: [--fix=lf]
+        exclude: \.(bat|cmd|ps1)$  # Windows scripts keep CRLF
+
+  # ---------- Python: ruff (lint + format) ----------
+  # Pinned slightly above the project's >=0.5 floor; keep in sync with pyproject.toml.
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.6
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+        files: ^connection-dashboard/.*\.py$
+      - id: ruff-format
+        files: ^connection-dashboard/.*\.py$
+
+  # ---------- TypeScript: project's own tsc (no extra download) ----------
+  - repo: local
+    hooks:
+      - id: typecheck-frontend
+        name: TypeScript type-check (frontend)
+        language: system
+        entry: python scripts/typecheck_frontend.py
+        files: ^connection-dashboard/frontend/.*\.(ts|tsx)$
+        pass_filenames: false
+        # tsc must see the whole project graph, so we don't pass filenames.
+
+  # ---------- Commit message: Conventional Commits ----------
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v3.6.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args:
+          - --strict
+          # Scope is optional by default. Allowed types (Conventional Commits
+          # + a few common extras):
+          - feat
+          - fix
+          - docs
+          - style
+          - refactor
+          - test
+          - chore
+          - perf
+          - ci
+          - build
+          - revert
+
+  # ---------- Pre-push: run the test suite ----------
+  - repo: local
+    hooks:
+      - id: pytest-backend
+        name: pytest (connection-dashboard backend)
+        language: system
+        entry: python scripts/run_pytest.py
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
