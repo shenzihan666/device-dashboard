@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "connection-dashboard"
 version = "0.1.0"
@@ -15,7 +19,10 @@ dependencies = [
     "aiosqlite>=0.20",
 ]
 
-[project.optional-dependencies]
+[tool.setuptools.packages.find]
+include = ["backend*", "tests*"]
+
+[dependency-groups]
 dev = [
     "pytest>=8",
     "pytest-asyncio>=0.24",

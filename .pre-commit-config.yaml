@@ -1,7 +1,7 @@
 # Git hooks managed by pre-commit (https://pre-commit.com).
 #
 # One-time setup:
-#   pip install pre-commit       # or: pipx install pre-commit
+#   uv tool install pre-commit
 #   pre-commit install --install-hooks
 #   pre-commit install --hook-type commit-msg
 #   pre-commit install --hook-type pre-push

@@ -65,7 +65,7 @@ def main() -> int:
 
     print(
         "[pytest-backend] pytest not found. Install dev deps:\n"
-        "    pip install -e .[dev]\n"
+        "    uv sync\n"
         "  or activate the project venv before pushing.",
         file=sys.stderr,
     )

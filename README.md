@@ -15,9 +15,9 @@ Build the frontend, then run the API (serves `frontend/dist` when present):
 
 ```bash
 cp .env.example .env           # fill in API_TOKEN (required), LANGSMITH_API_KEY (optional)
-pip install -r requirements.txt
+uv sync
 cd frontend && npm install && npm run build && cd ..
-python -m uvicorn backend.main:app --host 0.0.0.0 --port 8090
+uv run uvicorn backend.main:app --host 0.0.0.0 --port 8090
 ```
 
 Open `http://localhost:8090/` in a browser.
@@ -28,7 +28,7 @@ Run backend and Vite dev server in two terminals (Vite proxies `/api` and `/ws` 
 
 ```bash
 # Terminal A (from repo root)
-python -m uvicorn backend.main:app --host 0.0.0.0 --port 8090
+uv run uvicorn backend.main:app --host 0.0.0.0 --port 8090
 
 # Terminal B
 cd frontend
@@ -74,7 +74,7 @@ This project's hooks are managed via [pre-commit](https://pre-commit.com/).
 One-time setup:
 
 ```bash
-pip install pre-commit
+uv tool install pre-commit
 pre-commit install --install-hooks
 pre-commit install --hook-type commit-msg
 pre-commit install --hook-type pre-push
