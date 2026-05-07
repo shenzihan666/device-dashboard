@@ -1,6 +1,9 @@
 data/
 .venv/
 .env
+
+# Local IDE / agent settings (do not commit)
+.claude/settings.local.json
 __pycache__/
 *.pyc
 *.pyo

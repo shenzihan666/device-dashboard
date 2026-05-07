@@ -81,16 +81,16 @@ export default function ConnectionCanvas({
       const isDeviceHost = e.type === 'device_host';
       const fromId = isDeviceHost
         ? buildNodeId('device', e.from)
-        : buildNodeId('device', e.from);
+        : buildNodeId('server', e.to);
       const toId = isDeviceHost
         ? buildNodeId('host', e.to)
-        : buildNodeId('server', e.to);
+        : buildNodeId('device', e.from);
 
       const edgeColor = e.status === 'offline'
-        ? '#f85149'
+        ? '#dc2626'
         : isDeviceHost
-          ? '#7d8590'
-          : '#3fb950';
+          ? '#9ca3af'
+          : '#16a34a';
 
       return {
         id: `edge-${i}-${e.from}-${e.to}`,
@@ -136,16 +136,16 @@ export default function ConnectionCanvas({
       maxZoom={2}
       attributionPosition="bottom-left"
     >
-      <Background variant={BackgroundVariant.Dots} gap={16} size={1} color="#1d242e" />
+      <Background variant={BackgroundVariant.Dots} gap={16} size={1.5} color="#cbd5e1" />
       <Controls />
       <MiniMap
         nodeColor={(node) => {
-          if (node.type === 'server') return '#00d4ff';
-          if (node.type === 'host') return '#3fb950';
-          return '#7c5cff';
+          if (node.type === 'server') return '#3B82F6';
+          if (node.type === 'host') return '#10B981';
+          return '#7c3aed';
         }}
         nodeBorderRadius={6}
-        maskColor="rgba(0, 0, 0, 0.2)"
+        maskColor="rgba(0, 0, 0, 0.1)"
         pannable
         zoomable
         position="bottom-right"

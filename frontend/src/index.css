@@ -3,18 +3,18 @@
 @tailwind utilities;
 
 :root {
-  --bg-primary: #0d1117;
-  --bg-secondary: #11161e;
-  --bg-card: #161b22;
-  --border: #1d242e;
-  --text-primary: #e6edf3;
-  --text-secondary: #7d8590;
-  --accent: #00d4ff;
-  --accent-dim: rgba(0, 212, 255, 0.15);
-  --green: #3fb950;
-  --amber: #d29922;
-  --red: #f85149;
-  --purple: #7c5cff;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-card: #ffffff;
+  --border: #e5e7eb;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --accent: #2563eb;
+  --accent-dim: rgba(37, 99, 235, 0.1);
+  --green: #16a34a;
+  --amber: #d97706;
+  --red: #dc2626;
+  --purple: #7c3aed;
 }
 
 html, body, #root {
@@ -28,7 +28,7 @@ html, body, #root {
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg-primary); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #2d3642; }
+::-webkit-scrollbar-thumb:hover { background: #d1d5db; }
 
 /* Animations */
 @keyframes slide-in {
@@ -39,12 +39,12 @@ html, body, #root {
   animation: slide-in 0.2s ease-out;
 }
 
-/* React Flow overrides for dark theme */
+/* React Flow overrides for light theme */
 .react-flow__background {
   background-color: var(--bg-primary) !important;
 }
 .react-flow__minimap {
-  background: rgba(17, 22, 30, 0.95) !important;
+  background: rgba(255, 255, 255, 0.9) !important;
   border: 1px solid var(--border) !important;
   border-radius: 8px !important;
 }
@@ -54,14 +54,14 @@ html, body, #root {
   overflow: hidden;
 }
 .react-flow__controls button {
-  background: var(--bg-card) !important;
+  background: #ffffff !important;
   border-bottom: 1px solid var(--border) !important;
-  color: var(--text-primary) !important;
-  fill: var(--text-primary) !important;
+  color: #374151 !important;
+  fill: #374151 !important;
 }
 .react-flow__controls button:hover {
-  background: var(--bg-secondary) !important;
+  background: #f9fafb !important;
 }
 .react-flow__controls button svg {
-  fill: var(--text-primary) !important;
+  fill: #374151 !important;
 }

@@ -5,17 +5,17 @@ export default {
     extend: {
       colors: {
         foundry: {
-          bg: '#0d1117',
-          'bg-secondary': '#11161e',
-          card: '#161b22',
-          border: '#1d242e',
-          text: '#e6edf3',
-          'text-dim': '#7d8590',
-          accent: '#00d4ff',
-          green: '#3fb950',
-          amber: '#d29922',
-          red: '#f85149',
-          purple: '#7c5cff',
+          bg: '#ffffff',
+          'bg-secondary': '#ffffff',
+          card: '#ffffff',
+          border: '#e5e7eb',
+          text: '#111827',
+          'text-dim': '#6b7280',
+          accent: '#2563eb',
+          green: '#16a34a',
+          amber: '#d97706',
+          red: '#dc2626',
+          purple: '#7c3aed',
         },
       },
       fontFamily: {

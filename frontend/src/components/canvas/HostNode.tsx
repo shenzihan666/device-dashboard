@@ -21,7 +21,7 @@ export default function HostNode({ data, selected }: HostNodeProps) {
   return (
     <div className={`
       px-4 py-3 rounded-lg border-2 shadow-md min-w-[180px] max-w-[200px] transition-all
-      bg-[#0f1a14] ${borderColor}
+      bg-white ${borderColor}
       ${selected ? 'shadow-lg ring-2 ring-foundry-green/50' : ''}
     `}>
       <Handle type="target" position={Position.Top} className="!w-3 !h-3 !bg-foundry-green !border-foundry-green" />

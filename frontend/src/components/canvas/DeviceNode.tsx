@@ -27,7 +27,7 @@ export default function DeviceNode({ data, selected }: DeviceNodeProps) {
   return (
     <div className={`
       px-3 py-2.5 rounded-lg border-2 shadow-md min-w-[160px] max-w-[180px] transition-all
-      bg-[#12101e] ${borderColor}
+      bg-white ${borderColor}
       ${selected ? 'shadow-lg ring-2 ring-foundry-purple/50' : ''}
     `}>
       <Handle type="target" position={Position.Top} className="!w-3 !h-3 !bg-foundry-purple !border-foundry-purple" />

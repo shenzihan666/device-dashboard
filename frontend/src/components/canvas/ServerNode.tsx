@@ -17,7 +17,7 @@ export default function ServerNode({ data, selected }: ServerNodeProps) {
   return (
     <div className={`
       px-4 py-3 rounded-lg border-2 shadow-md min-w-[200px] max-w-[220px] transition-all
-      bg-[#0a1a24] border-foundry-accent
+      bg-white border-foundry-accent
       ${selected ? 'shadow-lg ring-2 ring-foundry-accent/50' : ''}
     `}>
       <Handle type="source" position={Position.Bottom} className="!w-3 !h-3 !bg-foundry-accent !border-foundry-accent" />

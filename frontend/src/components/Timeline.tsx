@@ -50,7 +50,7 @@ export default function Timeline({ events, appMode, onSeek }: TimelineProps) {
     ctx.clearRect(0, 0, w, h);
 
     // Background
-    ctx.fillStyle = '#0d1117';
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, w, h);
 
     if (!minNs || !maxNs || minNs >= maxNs) return;
@@ -59,7 +59,7 @@ export default function Timeline({ events, appMode, onSeek }: TimelineProps) {
     // Density histogram
     if (density.length > 0) {
       const maxCount = Math.max(...density.map((b) => b.count), 1);
-      ctx.fillStyle = 'rgba(0, 212, 255, 0.2)';
+      ctx.fillStyle = 'rgba(37, 99, 235, 0.15)';
       density.forEach((b) => {
         const x = ((b.ts_ns - minNs) / range) * w;
         const bw = Math.max(1, w / density.length);
@@ -71,21 +71,21 @@ export default function Timeline({ events, appMode, onSeek }: TimelineProps) {
     // Cursor line
     if (cursorNs !== null) {
       const x = ((cursorNs - minNs) / range) * w;
-      ctx.strokeStyle = '#00d4ff';
+      ctx.strokeStyle = '#2563eb';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(x, 0);
       ctx.lineTo(x, h);
       ctx.stroke();
 
-      ctx.fillStyle = '#00d4ff';
+      ctx.fillStyle = '#2563eb';
       ctx.beginPath();
       ctx.arc(x, 4, 5, 0, Math.PI * 2);
       ctx.fill();
     }
 
     // Top border
-    ctx.strokeStyle = '#1d242e';
+    ctx.strokeStyle = '#e5e7eb';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(0, 0);

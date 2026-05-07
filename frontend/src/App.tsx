@@ -55,11 +55,11 @@ export default function App() {
 
           <div className="flex gap-0.5 bg-foundry-bg rounded-md p-0.5">
             <button
-              className={`px-3.5 py-1 rounded text-xs font-medium transition-all ${appMode === 'live' ? 'bg-[rgba(0,212,255,0.15)] text-foundry-accent' : 'text-foundry-text-dim'}`}
+              className={`px-3.5 py-1 rounded text-xs font-medium transition-all ${appMode === 'live' ? 'bg-blue-100 text-foundry-accent' : 'text-foundry-text-dim'}`}
               onClick={() => handleSetMode('live')}
             >LIVE</button>
             <button
-              className={`px-3.5 py-1 rounded text-xs font-medium transition-all ${appMode === 'replay' ? 'bg-[rgba(0,212,255,0.15)] text-foundry-accent' : 'text-foundry-text-dim'}`}
+              className={`px-3.5 py-1 rounded text-xs font-medium transition-all ${appMode === 'replay' ? 'bg-blue-100 text-foundry-accent' : 'text-foundry-text-dim'}`}
               onClick={() => handleSetMode('replay')}
             >REPLAY</button>
           </div>
