@@ -142,9 +142,7 @@ class EventStore:
     # ── Cursor ───────────────────────────────────────────────────────────
 
     def get_cursor(self, ref: str) -> int | None:
-        row = self._conn.execute(
-            "SELECT ts_ns FROM cursors WHERE ref = ?", (ref,)
-        ).fetchone()
+        row = self._conn.execute("SELECT ts_ns FROM cursors WHERE ref = ?", (ref,)).fetchone()
         return row["ts_ns"] if row else None
 
     def set_cursor(self, ref: str, ts_ns: int) -> None:
@@ -229,9 +227,7 @@ class EventStore:
 
     def get_time_range(self) -> tuple[int | None, int | None]:
         """Return (min_ts_ns, max_ts_ns) across all events."""
-        row = self._conn.execute(
-            "SELECT MIN(ts_ns) AS mn, MAX(ts_ns) AS mx FROM events"
-        ).fetchone()
+        row = self._conn.execute("SELECT MIN(ts_ns) AS mn, MAX(ts_ns) AS mx FROM events").fetchone()
         if row and row["mn"] is not None:
             return (row["mn"], row["mx"])
         return (None, None)

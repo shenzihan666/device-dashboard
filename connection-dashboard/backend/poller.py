@@ -8,7 +8,7 @@ import time
 from typing import Any
 
 from backend import config
-from backend.events import AI_SERVER_OBSERVED, HOST_DEVICE_MAP, Event
+from backend.events import AI_SERVER_OBSERVED, Event
 from backend.grafana_client import GrafanaClient, GrafanaError, response_to_dataframes
 from backend.parser import parse_row
 from backend.state import StateProjector
@@ -88,9 +88,7 @@ class Poller:
             return
 
         logger.info("First start: backfilling %d hours of history", config.BACKFILL_HOURS)
-        backfill_from_ns = int(
-            (time.time() - config.BACKFILL_HOURS * 3600) * _NANO
-        )
+        backfill_from_ns = int((time.time() - config.BACKFILL_HOURS * 3600) * _NANO)
         from_ms = backfill_from_ns // 1_000_000
 
         for ref, spec in LOKI_QUERIES.items():
@@ -132,9 +130,7 @@ class Poller:
             await self._fetch_and_process(ref, spec, from_str=from_str)
             self.store.set_cursor(ref, now_ns)
 
-    async def _fetch_and_process(
-        self, ref: str, spec: dict[str, Any], from_str: str
-    ) -> None:
+    async def _fetch_and_process(self, ref: str, spec: dict[str, Any], from_str: str) -> None:
         client = self._get_client()
         query = client.build_loki_query(
             uid=config.LOKI_UID,
@@ -145,9 +141,7 @@ class Poller:
             direction="forward",
         )
         try:
-            raw = await asyncio.to_thread(
-                client.query, [query], from_str, "now"
-            )
+            raw = await asyncio.to_thread(client.query, [query], from_str, "now")
         except GrafanaError as exc:
             logger.warning("Loki query %s failed: %s", ref, exc)
             return
@@ -197,7 +191,9 @@ class Poller:
             logger.info("Ref %s: inserted %d new events", ref, new_count)
 
     async def _broadcast_event(self, event: Event) -> None:
-        await self.broadcaster.broadcast({
-            "type": "event",
-            "payload": event.to_dict(),
-        })
+        await self.broadcaster.broadcast(
+            {
+                "type": "event",
+                "payload": event.to_dict(),
+            }
+        )

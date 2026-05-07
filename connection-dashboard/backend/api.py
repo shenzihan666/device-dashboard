@@ -37,6 +37,7 @@ async def get_state(at: str | None = None) -> dict[str, Any]:
         at_ns = int(float(at) * _NANO) if "." in at else int(at)
     except ValueError:
         from datetime import datetime, timezone
+
         dt = datetime.fromisoformat(at.replace("Z", "+00:00"))
         at_ns = int(dt.replace(tzinfo=timezone.utc).timestamp() * _NANO)
 

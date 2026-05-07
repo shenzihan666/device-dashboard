@@ -12,9 +12,6 @@ from typing import Any
 from backend.events import (
     AI_HEALTH_CHECK,
     AI_SERVER_OBSERVED,
-    DEVICE_ERROR,
-    HOST_DEVICE_MAP,
-    METRIC_EVENT,
     SIDECAR_ERROR,
     SYNTH_DEVICE_OFFLINE,
     SYNTH_DEVICE_ONLINE,
@@ -75,12 +72,14 @@ class StateProjector:
 
             if self.device_offline.get(serial):
                 self.device_offline[serial] = False
-                synths.append(Event(
-                    ts_ns=event.ts_ns,
-                    kind=SYNTH_DEVICE_ONLINE,
-                    host=host or self.device_host.get(serial),
-                    device_serial=serial,
-                ))
+                synths.append(
+                    Event(
+                        ts_ns=event.ts_ns,
+                        kind=SYNTH_DEVICE_ONLINE,
+                        host=host or self.device_host.get(serial),
+                        device_serial=serial,
+                    )
+                )
 
         # Track host activity for health-related events
         if host and event.kind in (AI_HEALTH_CHECK, SIDECAR_ERROR):
@@ -88,24 +87,28 @@ class StateProjector:
 
             if self.host_offline.get(host):
                 self.host_offline[host] = False
-                synths.append(Event(
-                    ts_ns=event.ts_ns,
-                    kind=SYNTH_HOST_ONLINE,
-                    host=host,
-                ))
+                synths.append(
+                    Event(
+                        ts_ns=event.ts_ns,
+                        kind=SYNTH_HOST_ONLINE,
+                        host=host,
+                    )
+                )
 
         # Detect server switch
         if event.kind == AI_SERVER_OBSERVED and serial and event.ai_url:
             prev = self.current_url.get(serial)
             if prev is not None and prev != event.ai_url:
-                synths.append(Event(
-                    ts_ns=event.ts_ns,
-                    kind=SYNTH_SWITCHED,
-                    host=host or self.device_host.get(serial),
-                    device_serial=serial,
-                    ai_url=event.ai_url,
-                    prev_ai_url=prev,
-                ))
+                synths.append(
+                    Event(
+                        ts_ns=event.ts_ns,
+                        kind=SYNTH_SWITCHED,
+                        host=host or self.device_host.get(serial),
+                        device_serial=serial,
+                        ai_url=event.ai_url,
+                        prev_ai_url=prev,
+                    )
+                )
             self.current_url[serial] = event.ai_url
 
         return synths
@@ -121,21 +124,25 @@ class StateProjector:
         for serial, last_ts in list(self.device_last_seen.items()):
             if last_ts < threshold and not self.device_offline.get(serial):
                 self.device_offline[serial] = True
-                synths.append(Event(
-                    ts_ns=now_ns,
-                    kind=SYNTH_DEVICE_OFFLINE,
-                    host=self.device_host.get(serial),
-                    device_serial=serial,
-                ))
+                synths.append(
+                    Event(
+                        ts_ns=now_ns,
+                        kind=SYNTH_DEVICE_OFFLINE,
+                        host=self.device_host.get(serial),
+                        device_serial=serial,
+                    )
+                )
 
         for host, last_ts in list(self.host_last_seen.items()):
             if last_ts < threshold and not self.host_offline.get(host):
                 self.host_offline[host] = True
-                synths.append(Event(
-                    ts_ns=now_ns,
-                    kind=SYNTH_HOST_OFFLINE,
-                    host=host,
-                ))
+                synths.append(
+                    Event(
+                        ts_ns=now_ns,
+                        kind=SYNTH_HOST_OFFLINE,
+                        host=host,
+                    )
+                )
 
         return synths
 
@@ -177,12 +184,14 @@ class StateProjector:
             # Edges
             if host:
                 edges.append({"from": serial, "to": host, "type": "device_host"})
-            edges.append({
-                "from": serial,
-                "to": url,
-                "type": "device_server",
-                "status": status,
-            })
+            edges.append(
+                {
+                    "from": serial,
+                    "to": url,
+                    "type": "device_server",
+                    "status": status,
+                }
+            )
 
         return {
             "servers": list(servers.values()),

@@ -19,16 +19,20 @@ async def lookup_trace(request_id: str) -> dict[str, Any] | None:
         from langsmith import Client
 
         client = Client(api_key=config.LANGSMITH_API_KEY)
-        runs = list(client.list_runs(
-            filter=f'has(metadata, {{"request_id": "{request_id}"}})',
-            limit=1,
-        ))
+        runs = list(
+            client.list_runs(
+                filter=f'has(metadata, {{"request_id": "{request_id}"}})',
+                limit=1,
+            )
+        )
 
         if not runs:
-            runs = list(client.list_runs(
-                filter=f'eq(inputs.request_id, "{request_id}")',
-                limit=1,
-            ))
+            runs = list(
+                client.list_runs(
+                    filter=f'eq(inputs.request_id, "{request_id}")',
+                    limit=1,
+                )
+            )
 
         if not runs:
             return None

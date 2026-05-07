@@ -12,7 +12,8 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend import config
-from backend.api import init_api, router as api_router
+from backend.api import init_api
+from backend.api import router as api_router
 from backend.langsmith_link import lookup_trace
 from backend.poller import Poller
 from backend.state import StateProjector

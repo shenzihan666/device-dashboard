@@ -108,8 +108,8 @@ class TestDeviceError:
 
 class TestMetricsEvent:
     LINE = (
-        '2026-05-07 18:49:44 | INFO     | '
-        'wecom_automation.core.metrics_logger:_emit:119 | '
+        "2026-05-07 18:49:44 | INFO     | "
+        "wecom_automation.core.metrics_logger:_emit:119 | "
         '{"timestamp": "2026-05-07T18:49:44.467965", "level": "METRIC", '
         '"event": "session_summary", "session_id": "9d83e495", '
         '"device_serial": "10AEC61XMY00773", "data": {"duration_seconds": 4998.27}}'

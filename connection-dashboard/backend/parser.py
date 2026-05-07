@@ -19,9 +19,7 @@ from backend.events import (
 
 # ── AI Server observed ──────────────────────────────────────────────────
 # Example: [10AE9X304J0033Z] AI Server: http://118.31.238.44:8000/chat
-_RE_AI_SERVER = re.compile(
-    r"\[(?P<serial>[A-Z0-9]+)\]\s+AI Server:\s+(?P<url>https?://[^\s]+)"
-)
+_RE_AI_SERVER = re.compile(r"\[(?P<serial>[A-Z0-9]+)\]\s+AI Server:\s+(?P<url>https?://[^\s]+)")
 
 # ── AI Health Check ─────────────────────────────────────────────────────
 # Example: [AIHealthChecker] status=healthy network=reachable http=alive inference=None time=94ms
@@ -42,9 +40,7 @@ _RE_SIDECAR_ERR = re.compile(
 
 # ── Per-device error ────────────────────────────────────────────────────
 # Example: [10AE9X304J0033Z] Error: Server disconnected
-_RE_DEVICE_ERR = re.compile(
-    r"\[(?P<serial>[A-Z0-9]+)\]\s+Error:\s+(?P<message>.+)"
-)
+_RE_DEVICE_ERR = re.compile(r"\[(?P<serial>[A-Z0-9]+)\]\s+Error:\s+(?P<message>.+)")
 
 # ── Host/device mapping from ADB traces ─────────────────────────────────
 # Example: [ADB_TRACE] serial=10AEC61XMY00773 pid=7612 ...
@@ -189,9 +185,7 @@ def parse_row(
     if ref == "B":
         return parse_health_check(line, ts_ns, host)
     if ref == "C":
-        return parse_sidecar_error(line, ts_ns, host) or parse_device_error(
-            line, ts_ns, host
-        )
+        return parse_sidecar_error(line, ts_ns, host) or parse_device_error(line, ts_ns, host)
     if ref == "D":
         return parse_metrics_event(line, ts_ns, host)
     if ref == "E":

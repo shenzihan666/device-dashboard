@@ -160,11 +160,23 @@ class TestRebuild:
         proj.process(_make_event(110, URL_B))
 
         proj2 = StateProjector()
-        proj2.rebuild_from_events([
-            {"ts_ns": 100 * _NANO, "kind": AI_SERVER_OBSERVED, "host": HOST,
-             "device_serial": SERIAL, "ai_url": URL_A},
-            {"ts_ns": 110 * _NANO, "kind": AI_SERVER_OBSERVED, "host": HOST,
-             "device_serial": SERIAL, "ai_url": URL_B},
-        ])
+        proj2.rebuild_from_events(
+            [
+                {
+                    "ts_ns": 100 * _NANO,
+                    "kind": AI_SERVER_OBSERVED,
+                    "host": HOST,
+                    "device_serial": SERIAL,
+                    "ai_url": URL_A,
+                },
+                {
+                    "ts_ns": 110 * _NANO,
+                    "kind": AI_SERVER_OBSERVED,
+                    "host": HOST,
+                    "device_serial": SERIAL,
+                    "ai_url": URL_B,
+                },
+            ]
+        )
         assert proj2.current_url[SERIAL] == URL_B
         assert proj2.get_snapshot() == proj.get_snapshot()
