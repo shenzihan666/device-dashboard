@@ -13,6 +13,8 @@ from typing import Any
 from backend.core.domain.events import (
     AI_HEALTH_CHECK,
     AI_SERVER_OBSERVED,
+    DEVICE_IDLE,
+    DEVICE_PROCESSING,
     SIDECAR_ERROR,
     SYNTH_DEVICE_OFFLINE,
     SYNTH_DEVICE_ONLINE,
@@ -47,6 +49,8 @@ class StateProjector:
 
         self.host_devices: dict[str, set[str]] = {}
         self.device_host: dict[str, str] = {}
+
+        self.device_processing: dict[str, bool] = {}
 
     def process(self, event: Event) -> list[Event]:
         """Process one event; return synthetic events (may be empty)."""
@@ -101,6 +105,11 @@ class StateProjector:
                 )
             self.current_url[serial] = event.ai_url
 
+        if event.kind == DEVICE_PROCESSING and serial:
+            self.device_processing[serial] = True
+        elif event.kind == DEVICE_IDLE and serial:
+            self.device_processing[serial] = False
+
         return synths
 
     def check_offline(self, now_ns: int | None = None) -> list[Event]:
@@ -153,6 +162,7 @@ class StateProjector:
                 "host": host,
                 "ai_url": url,
                 "status": status,
+                "processing": self.device_processing.get(serial, False),
                 "last_seen_ns": self.device_last_seen.get(serial),
             }
 

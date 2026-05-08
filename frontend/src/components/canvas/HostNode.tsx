@@ -5,6 +5,7 @@ interface HostNodeData {
   label: string;
   status: string;
   deviceCount: number;
+  processingCount: number;
   [key: string]: unknown;
 }
 
@@ -15,8 +16,18 @@ interface HostNodeProps {
 
 export default function HostNode({ data, selected }: HostNodeProps) {
   const isOffline = data.status === 'offline';
-  const borderColor = isOffline ? 'border-foundry-red' : 'border-foundry-green';
-  const iconColor = isOffline ? 'text-foundry-red' : 'text-foundry-green';
+  const isProcessing = (data.processingCount ?? 0) > 0;
+
+  const borderColor = isOffline
+    ? 'border-foundry-red'
+    : isProcessing
+      ? 'border-foundry-amber'
+      : 'border-foundry-green';
+  const iconColor = isOffline
+    ? 'text-foundry-red'
+    : isProcessing
+      ? 'text-foundry-amber'
+      : 'text-foundry-green';
 
   return (
     <div className={`
@@ -37,9 +48,9 @@ export default function HostNode({ data, selected }: HostNodeProps) {
 
       <div className="flex items-center gap-3 pt-2 border-t border-foundry-border">
         <div className="flex items-center gap-1">
-          <span className={`w-2 h-2 rounded-full ${isOffline ? 'bg-foundry-red' : 'bg-foundry-green'}`} />
-          <span className={`text-xs font-mono ${isOffline ? 'text-foundry-red' : 'text-foundry-green'}`}>
-            {data.status}
+          <span className={`w-2 h-2 rounded-full ${isOffline ? 'bg-foundry-red' : isProcessing ? 'bg-foundry-amber' : 'bg-foundry-green'}`} />
+          <span className={`text-xs font-mono ${isOffline ? 'text-foundry-red' : isProcessing ? 'text-foundry-amber' : 'text-foundry-green'}`}>
+            {isProcessing ? `${data.processingCount} 🔴` : data.status}
           </span>
         </div>
         <span className="text-xs text-foundry-text-dim">

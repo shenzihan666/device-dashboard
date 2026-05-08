@@ -53,16 +53,22 @@ export default function ConnectionCanvas({
         },
         position: { x: 0, y: 0 },
       })),
-      ...snapshot.hosts.map((h) => ({
-        id: buildNodeId('host', h.name),
-        type: 'host' as const,
-        data: {
-          label: h.name,
-          status: h.status,
-          deviceCount: h.device_count,
-        },
-        position: { x: 0, y: 0 },
-      })),
+      ...snapshot.hosts.map((h) => {
+        const processingCount = snapshot.devices.filter(
+          (d) => d.host === h.name && d.processing === true,
+        ).length;
+        return {
+          id: buildNodeId('host', h.name),
+          type: 'host' as const,
+          data: {
+            label: h.name,
+            status: h.status,
+            deviceCount: h.device_count,
+            processingCount,
+          },
+          position: { x: 0, y: 0 },
+        };
+      }),
       ...snapshot.devices.map((d) => ({
         id: buildNodeId('device', d.serial),
         type: 'device' as const,
@@ -72,6 +78,7 @@ export default function ConnectionCanvas({
           host: d.host,
           aiUrl: d.ai_url,
           status: d.status,
+          processing: d.processing ?? false,
         },
         position: { x: 0, y: 0 },
       })),

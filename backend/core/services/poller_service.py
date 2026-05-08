@@ -47,6 +47,10 @@ LOKI_QUERIES: dict[str, dict[str, Any]] = {
         "expr": '{job="wecom-sidecar-logs"} |~ "serial=[A-Z0-9]"',
         "max_lines": 200,
     },
+    "F": {
+        "expr": '{job="wecom-sidecar-logs"} |~ "priority users|No red dot users|Queue empty"',
+        "max_lines": 500,
+    },
 }
 
 

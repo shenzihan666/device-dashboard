@@ -4,6 +4,8 @@ from backend.core.domain.events import (
     AI_HEALTH_CHECK,
     AI_SERVER_OBSERVED,
     DEVICE_ERROR,
+    DEVICE_IDLE,
+    DEVICE_PROCESSING,
     HOST_DEVICE_MAP,
     METRIC_EVENT,
     SIDECAR_ERROR,
@@ -11,6 +13,8 @@ from backend.core.domain.events import (
 from backend.core.services.parser import (
     parse_ai_server,
     parse_device_error,
+    parse_device_idle,
+    parse_device_processing,
     parse_health_check,
     parse_host_device_map,
     parse_metrics_event,
@@ -151,3 +155,75 @@ class TestHostDeviceMap:
         ev = parse_host_device_map(line, TS, HOST)
         assert ev is not None
         assert ev.device_serial == "15787989750086X"
+
+
+class TestDeviceProcessing:
+    LINE = (
+        "2026-05-08 04:10:40 | INFO     | "
+        "services.followup.response_detector:_detect_first_page_unread:1093 | "
+        "[15787989750086X] 🔴 Found 2 priority users on first page (2 unread, 0 new friends)"
+    )
+
+    def test_parse(self):
+        ev = parse_device_processing(self.LINE, TS, HOST)
+        assert ev is not None
+        assert ev.kind == DEVICE_PROCESSING
+        assert ev.device_serial == "15787989750086X"
+        assert ev.payload["priority_count"] == 2
+        assert ev.host == HOST
+
+    def test_parse_three_users(self):
+        line = (
+            "2026-05-08 04:11:12 | INFO     | "
+            "services.followup.response_detector:_detect_first_page_unread:1093 | "
+            "[10AF42051X00B1D] 🔴 Found 3 priority users on first page (3 unread, 0 new friends)"
+        )
+        ev = parse_device_processing(line, TS, HOST)
+        assert ev is not None
+        assert ev.device_serial == "10AF42051X00B1D"
+        assert ev.payload["priority_count"] == 3
+
+    def test_no_match(self):
+        assert parse_device_processing("random log line", TS, HOST) is None
+
+    def test_via_parse_row(self):
+        labels = {"host": HOST}
+        ev = parse_row(self.LINE, TS, labels, ref="F")
+        assert ev is not None
+        assert ev.kind == DEVICE_PROCESSING
+
+
+class TestDeviceIdle:
+    LINE_NO_RED_DOT = (
+        "2026-05-08 04:11:11 | INFO     | "
+        "services.followup.response_detector:_scan_device_for_responses:896 | "
+        "[10AEB80XHX006D4] ✅ No red dot users found"
+    )
+
+    LINE_QUEUE_EMPTY = (
+        "2026-05-08 04:11:13 | INFO     | "
+        "services.followup.response_detector:_scan_device_for_responses:1029 | "
+        "[10AF42051X00B1D] ✅ Queue empty, all red dot users processed"
+    )
+
+    def test_parse_no_red_dot(self):
+        ev = parse_device_idle(self.LINE_NO_RED_DOT, TS, HOST)
+        assert ev is not None
+        assert ev.kind == DEVICE_IDLE
+        assert ev.device_serial == "10AEB80XHX006D4"
+        assert ev.host == HOST
+
+    def test_parse_queue_empty(self):
+        ev = parse_device_idle(self.LINE_QUEUE_EMPTY, TS, HOST)
+        assert ev is not None
+        assert ev.kind == DEVICE_IDLE
+        assert ev.device_serial == "10AF42051X00B1D"
+
+    def test_no_match(self):
+        assert parse_device_idle("random log line", TS, HOST) is None
+
+    def test_via_parse_row(self):
+        labels = {"host": HOST}
+        ev = parse_row(self.LINE_NO_RED_DOT, TS, labels, ref="F")
+        assert ev is not None
+        assert ev.kind == DEVICE_IDLE

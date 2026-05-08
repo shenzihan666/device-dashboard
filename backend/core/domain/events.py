@@ -35,6 +35,8 @@ SIDECAR_ERROR = "sidecar_error"
 DEVICE_ERROR = "device_error"
 METRIC_EVENT = "metric_event"
 HOST_DEVICE_MAP = "host_device_map"
+DEVICE_PROCESSING = "device_processing"
+DEVICE_IDLE = "device_idle"
 
 SYNTH_SWITCHED = "synth_switched"
 SYNTH_DEVICE_OFFLINE = "synth_device_offline"

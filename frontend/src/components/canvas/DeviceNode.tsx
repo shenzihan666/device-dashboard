@@ -7,6 +7,7 @@ interface DeviceNodeData {
   host?: string;
   aiUrl: string;
   status: string;
+  processing?: boolean;
   [key: string]: unknown;
 }
 
@@ -17,8 +18,18 @@ interface DeviceNodeProps {
 
 export default function DeviceNode({ data, selected }: DeviceNodeProps) {
   const isOffline = data.status === 'offline';
-  const borderColor = isOffline ? 'border-foundry-red' : 'border-foundry-purple';
-  const iconColor = isOffline ? 'text-foundry-red' : 'text-foundry-purple';
+  const isProcessing = data.processing === true;
+
+  const borderColor = isOffline
+    ? 'border-foundry-red'
+    : isProcessing
+      ? 'border-foundry-amber'
+      : 'border-foundry-purple';
+  const iconColor = isOffline
+    ? 'text-foundry-red'
+    : isProcessing
+      ? 'text-foundry-amber'
+      : 'text-foundry-purple';
 
   const shortUrl = (data.aiUrl || '')
     .replace('http://', '')
@@ -52,10 +63,22 @@ export default function DeviceNode({ data, selected }: DeviceNodeProps) {
       </div>
 
       <div className="flex items-center gap-1 pt-1.5 border-t border-foundry-border">
-        <span className={`w-1.5 h-1.5 rounded-full ${isOffline ? 'bg-foundry-red' : 'bg-foundry-green'}`} />
-        <span className={`text-[10px] font-mono ${isOffline ? 'text-foundry-red' : 'text-foundry-green'}`}>
-          {data.status}
-        </span>
+        {isProcessing ? (
+          <>
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+            </span>
+            <span className="text-[10px] font-mono text-red-500">processing</span>
+          </>
+        ) : (
+          <>
+            <span className={`w-1.5 h-1.5 rounded-full ${isOffline ? 'bg-foundry-red' : 'bg-foundry-green'}`} />
+            <span className={`text-[10px] font-mono ${isOffline ? 'text-foundry-red' : 'text-foundry-green'}`}>
+              {data.status}
+            </span>
+          </>
+        )}
       </div>
 
       <Handle type="source" position={Position.Bottom} className="!w-3 !h-3 !bg-foundry-purple !border-foundry-purple" />

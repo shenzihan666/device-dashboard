@@ -17,7 +17,7 @@ export interface ConnectionEvent {
 export interface StateSnapshot {
   servers: { url: string; device_count: number }[];
   hosts: { name: string; status: string; last_seen_ns?: number; device_count: number }[];
-  devices: { serial: string; host?: string; ai_url: string; status: string; last_seen_ns?: number }[];
+  devices: { serial: string; host?: string; ai_url: string; status: string; processing?: boolean; last_seen_ns?: number }[];
   edges: { from: string; to: string; type: string; status?: string }[];
 }
 

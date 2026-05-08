@@ -13,6 +13,8 @@ const KIND_CONFIG: Record<string, { cls: string; label: string }> = {
   device_error: { cls: 'bg-red-50 text-red-600', label: 'DEV ERR' },
   metric_event: { cls: 'bg-amber-50 text-amber-700', label: 'METRIC' },
   host_device_map: { cls: 'bg-blue-50 text-blue-600', label: 'MAP' },
+  device_processing: { cls: 'bg-red-50 text-red-600', label: 'PROCESSING' },
+  device_idle: { cls: 'bg-emerald-50 text-emerald-600', label: 'IDLE' },
 };
 
 function formatTime(tsNs: number | undefined | null): string {
@@ -68,6 +70,9 @@ export default function EventFeed({ events, onEventClick }: EventFeedProps) {
               )}
               {ev.kind !== 'synth_switched' && ev.ai_url && (
                 <span className="text-amber-700">{ev.ai_url.replace('http://', '').replace('/chat', '')}</span>
+              )}
+              {ev.kind === 'device_processing' && ev.payload_json?.priority_count != null && (
+                <span className="text-red-600 ml-1">{ev.payload_json.priority_count} users</span>
               )}
             </div>
           );

@@ -11,6 +11,8 @@ from backend.core.domain.events import (
     AI_HEALTH_CHECK,
     AI_SERVER_OBSERVED,
     DEVICE_ERROR,
+    DEVICE_IDLE,
+    DEVICE_PROCESSING,
     HOST_DEVICE_MAP,
     METRIC_EVENT,
     SIDECAR_ERROR,
@@ -39,6 +41,12 @@ _RE_SERIAL_IN_BODY = re.compile(r"serial=(?P<serial>[A-Z0-9]{6,})")
 _RE_BRACKET_SERIAL = re.compile(r"\[(?P<serial>[A-Z0-9]{8,})\]")
 
 _RE_METRICS_JSON = re.compile(r"metrics_logger:_emit:\d+\s*\|\s*(?P<json>\{.+)")
+
+_RE_FOUND_RED_DOT = re.compile(
+    r"\[(?P<serial>[A-Z0-9]+)\]\s+.*Found\s+(?P<count>\d+)\s+priority users"
+)
+
+_RE_NO_RED_DOT = re.compile(r"\[(?P<serial>[A-Z0-9]+)\]\s+.*(?:No red dot users found|Queue empty)")
 
 
 def _extract_host_from_labels(labels: str | dict | None) -> str | None:
@@ -155,6 +163,35 @@ def parse_host_device_map(line: str, ts_ns: int, host: str | None) -> Event | No
     )
 
 
+def parse_device_processing(line: str, ts_ns: int, host: str | None) -> Event | None:
+    """Detect 'Found N priority users on first page' → device is busy processing."""
+    m = _RE_FOUND_RED_DOT.search(line)
+    if not m:
+        return None
+    return Event(
+        ts_ns=ts_ns,
+        kind=DEVICE_PROCESSING,
+        host=host,
+        device_serial=m.group("serial"),
+        raw_line=line,
+        payload={"priority_count": int(m.group("count"))},
+    )
+
+
+def parse_device_idle(line: str, ts_ns: int, host: str | None) -> Event | None:
+    """Detect 'No red dot users found' or 'Queue empty' → device is idle."""
+    m = _RE_NO_RED_DOT.search(line)
+    if not m:
+        return None
+    return Event(
+        ts_ns=ts_ns,
+        kind=DEVICE_IDLE,
+        host=host,
+        device_serial=m.group("serial"),
+        raw_line=line,
+    )
+
+
 def parse_row(
     line: str,
     ts_ns: int,
@@ -174,5 +211,7 @@ def parse_row(
         return parse_metrics_event(line, ts_ns, host)
     if ref == "E":
         return parse_host_device_map(line, ts_ns, host)
+    if ref == "F":
+        return parse_device_processing(line, ts_ns, host) or parse_device_idle(line, ts_ns, host)
 
     return None
