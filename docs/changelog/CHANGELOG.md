@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- WebSocket `/ws/live` handler uses `ws.app.state` for the broadcaster (avoids relying on `Request` injection on the websocket route).
+- Graph canvas in **Edit** mode: wire `onNodesChange` / `onEdgesChange` with `useNodesState` / `useEdgesState` so nodes move smoothly while dragging instead of only after mouse-up.
+- Event feed: render `device_processing` `priority_count` via `String(...)` for consistent React text children.
+
 ### Added
 
 - Enterprise-grade documentation structure with categorized folders, templates, and seed documents.

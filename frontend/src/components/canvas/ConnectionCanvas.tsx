@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
 import {
   ReactFlow,
   Controls,
@@ -6,6 +6,8 @@ import {
   Background,
   BackgroundVariant,
   MarkerType,
+  useNodesState,
+  useEdgesState,
   type Node,
   type Edge,
   type NodeTypes,
@@ -41,7 +43,10 @@ export default function ConnectionCanvas({
   canvasMode,
   onNodeDragStop,
 }: ConnectionCanvasProps) {
-  const { nodes, edges } = useMemo(() => {
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+
+  useEffect(() => {
     const rawNodes: Node[] = [
       ...snapshot.servers.map((s) => ({
         id: buildNodeId('server', s.url),
@@ -119,9 +124,9 @@ export default function ConnectionCanvas({
       };
     });
 
-    const layoutedNodes = applyDagreLayout(rawNodes, rawEdges, positions);
-    return { nodes: layoutedNodes, edges: rawEdges };
-  }, [snapshot, positions]);
+    setNodes(applyDagreLayout(rawNodes, rawEdges, positions));
+    setEdges(rawEdges);
+  }, [snapshot, positions, setNodes, setEdges]);
 
   const handleDragStop = useCallback((_event: React.MouseEvent, node: Node) => {
     onNodeDragStop(node.id, node.position.x, node.position.y);
@@ -131,6 +136,8 @@ export default function ConnectionCanvas({
     <ReactFlow
       nodes={nodes}
       edges={edges}
+      onNodesChange={onNodesChange}
+      onEdgesChange={onEdgesChange}
       nodeTypes={nodeTypes}
       nodesDraggable={canvasMode === 'edit'}
       nodesConnectable={false}

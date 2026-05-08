@@ -7,7 +7,7 @@ The UI lives in `frontend/` and is built with **Vite**, **React**, **Tailwind CS
 The main app grid (`App.tsx`):
 
 - **Top bar** — title, LIVE/REPLAY toggle, WebSocket status.
-- **Center** — React Flow canvas with floating **View / Edit** toolbar (`CanvasToolbar.tsx`): same muted-track **segmented** pattern as LIVE/REPLAY (active segment is white on `geist-bg-muted`) so labels stay legible on the dot grid; **Edit** enables dragging; positions persist via `/api/layout`.
+- **Center** — React Flow canvas with floating **View / Edit** toolbar (`CanvasToolbar.tsx`): same muted-track **segmented** pattern as LIVE/REPLAY (active segment is white on `geist-bg-muted`) so labels stay legible on the dot grid; **Edit** enables dragging with controlled node state (`useNodesState` + `onNodesChange`) so the canvas repaints while dragging; final positions persist via `/api/layout` on drag end.
 - **Right column** — event feed.
 - **Bottom** — timeline scrubber for replay.
 

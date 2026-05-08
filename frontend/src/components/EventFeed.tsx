@@ -72,7 +72,7 @@ export default function EventFeed({ events, onEventClick }: EventFeedProps) {
                 <span className="text-amber-700">{ev.ai_url.replace('http://', '').replace('/chat', '')}</span>
               )}
               {ev.kind === 'device_processing' && ev.payload_json?.priority_count != null && (
-                <span className="text-red-600 ml-1">{ev.payload_json.priority_count} users</span>
+                <span className="text-red-600 ml-1">{String(ev.payload_json.priority_count)} users</span>
               )}
             </div>
           );

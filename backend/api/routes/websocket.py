@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Request, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 router = APIRouter(tags=["websocket"])
 
 
 @router.websocket("/ws/live")
-async def websocket_live(ws: WebSocket, request: Request) -> None:
-    broadcaster = request.app.state.broadcaster
+async def websocket_live(ws: WebSocket) -> None:
+    broadcaster = ws.app.state.broadcaster
     await broadcaster.connect(ws)
     try:
         while True:
