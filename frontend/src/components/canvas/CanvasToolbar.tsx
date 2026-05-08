@@ -10,12 +10,12 @@ export default function CanvasToolbar({ mode, onModeChange, onResetLayout }: Can
   return (
     <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
       {/* Mode toggle */}
-      <div className="flex gap-0.5 bg-white border border-geist-border rounded-lg p-0.5 shadow-sm">
+      <div className="flex gap-0.5 bg-geist-bg-muted border border-geist-border rounded-lg p-0.5 shadow-sm">
         <button
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
             mode === 'view'
-              ? 'bg-geist-fg text-white'
-              : 'text-geist-fg-muted hover:text-geist-fg hover:bg-geist-bg-muted'
+              ? 'bg-white shadow-sm text-geist-fg'
+              : 'text-geist-fg-muted hover:text-geist-fg hover:bg-geist-bg-subtle'
           }`}
           onClick={() => onModeChange('view')}
         >
@@ -25,8 +25,8 @@ export default function CanvasToolbar({ mode, onModeChange, onResetLayout }: Can
         <button
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
             mode === 'edit'
-              ? 'bg-geist-fg text-white'
-              : 'text-geist-fg-muted hover:text-geist-fg hover:bg-geist-bg-muted'
+              ? 'bg-white shadow-sm text-geist-fg'
+              : 'text-geist-fg-muted hover:text-geist-fg hover:bg-geist-bg-subtle'
           }`}
           onClick={() => onModeChange('edit')}
         >

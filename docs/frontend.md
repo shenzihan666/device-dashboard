@@ -7,7 +7,7 @@ The UI lives in `frontend/` and is built with **Vite**, **React**, **Tailwind CS
 The main app grid (`App.tsx`):
 
 - **Top bar** — title, LIVE/REPLAY toggle, WebSocket status.
-- **Center** — React Flow canvas with floating **View / Edit** toolbar (Edit enables dragging; positions persist via `/api/layout`).
+- **Center** — React Flow canvas with floating **View / Edit** toolbar (`CanvasToolbar.tsx`): same muted-track **segmented** pattern as LIVE/REPLAY (active segment is white on `geist-bg-muted`) so labels stay legible on the dot grid; **Edit** enables dragging; positions persist via `/api/layout`.
 - **Right column** — event feed.
 - **Bottom** — timeline scrubber for replay.
 
@@ -40,6 +40,7 @@ Server→device links are drawn as **server → device**; device→host links as
 
 | Path | Role |
 |------|------|
+| `src/components/canvas/CanvasToolbar.tsx` | Floating View / Edit mode toggle and reset layout |
 | `src/components/canvas/ConnectionCanvas.tsx` | React Flow, edges, background |
 | `src/utils/dagreLayout.ts` | Auto-layout for nodes without saved positions |
 | `src/components/canvas/*Node.tsx` | Server / Device / Host card UI |
