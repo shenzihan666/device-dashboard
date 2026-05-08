@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Breaking:** REST responses are wrapped in `{ success, data, error, error_code, meta }`; `PUT /api/layout` expects `{ "positions": [...] }` instead of a bare JSON array.
 - Grafana client is async **httpx** (`backend/infrastructure/external/grafana_client.py`); pandas and sync `requests` usage removed from the backend path.
 - Frontend `src/services/api.ts` unwraps the envelope for all dashboard API calls; LangSmith opens `trace_url` after a client-side fetch.
+- Deployment runbook (`docs/runbooks/deployment.md`): optional Alembic step and curl checks updated for the response envelope.
 
 ### Removed
 

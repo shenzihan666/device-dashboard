@@ -3,7 +3,7 @@
 | Field | Value |
 |-------|-------|
 | **Author** | Team |
-| **Last updated** | 2025-01-15 |
+| **Last updated** | 2026-05-08 |
 | **Audience** | Ops / Dev |
 | **Frequency** | Per-release |
 
@@ -58,9 +58,18 @@ cp .env.example .env    # only on first deploy
 #   GRAFANA_URL=https://your-instance.grafana.net
 #   POLL_INTERVAL_S=10
 #   BACKFILL_HOURS=24
+#   DB_URL=sqlite+aiosqlite:///data/events.db   # optional override
 ```
 
 See [Configuration](../guide/configuration.md) for all variables.
+
+### Step 4b: Database schema (optional)
+
+On upgrades, apply Alembic migrations when you rely on versioned schema instead of startup auto-create:
+
+```bash
+uv run alembic upgrade head
+```
 
 ### Step 5: Start the Application
 
@@ -88,14 +97,14 @@ cd frontend && npm ci && npm run build && cd ..
 uv run uvicorn backend.main:app --host 0.0.0.0 --port 8090
 ```
 
-SQLite data is preserved across deployments. No migration step is required for rollback.
+SQLite data is preserved across deployments. Roll back the Git revision first; re-run `uv run alembic upgrade head` only if the target revision expects a newer schema.
 
 ## Verification
 
 | Check | Expected |
 |-------|----------|
-| `curl http://localhost:8090/api/state` | Returns JSON with `servers`, `devices`, `hosts` |
-| `curl http://localhost:8090/api/time_range` | Returns `start` and `end` timestamps |
+| `curl http://localhost:8090/api/state` | JSON envelope: `success` true and `data` containing `servers`, `devices`, `hosts`, `edges` |
+| `curl http://localhost:8090/api/time_range` | JSON envelope: `data.min_ns` and `data.max_ns` (may be `null` when empty) |
 | Browser → graph canvas | Nodes render; edges connect tiers |
 | Browser → WebSocket status | Shows "LIVE" (green) |
 
