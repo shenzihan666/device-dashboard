@@ -20,12 +20,12 @@ Operations teams need visibility into which WeCom desktop clients are connected 
 
 ### Backend (FastAPI + SQLite)
 
-- **Poller** (`backend/poller.py`) queries Grafana Loki on a configurable interval (`POLL_INTERVAL_S`), with initial backfill (`BACKFILL_HOURS`).
-- **Parser** (`backend/parser.py`) extracts structured fields (server URL, device serial, host name, event type) from log lines.
-- **State engine** (`backend/state.py`) maintains in-memory snapshots of servers, devices, hosts, and edges; marks devices offline after `OFFLINE_GRACE_S`.
-- **Store** (`backend/store.py`) persists events and node layout positions in SQLite.
-- **API** (`backend/api.py`) exposes REST endpoints for state, events, time range, density, and layout CRUD.
-- **WebSocket** (`backend/ws.py`) pushes live events to connected browsers.
+- **Poller** (`backend/core/services/poller_service.py`) queries Grafana Loki on a configurable interval (`POLL_INTERVAL_S`), with initial backfill (`BACKFILL_HOURS`).
+- **Parser** (`backend/core/services/parser.py`) extracts structured fields (server URL, device serial, host name, event type) from log lines.
+- **State engine** (`backend/core/services/state_projector.py`) maintains in-memory snapshots of servers, devices, hosts, and edges; marks devices offline after `OFFLINE_GRACE_S`.
+- **Persistence** (`backend/infrastructure/database/repositories/`) persists events, entities, cursors, and node layout positions in SQLite via SQLAlchemy async.
+- **API** (`backend/api/routes/`) exposes REST endpoints for state, events, entities, time range, density, layout, status, and LangSmith trace lookup.
+- **WebSocket** (`backend/infrastructure/websocket/broadcaster.py` + `backend/api/routes/websocket.py`) pushes live events to connected browsers.
 
 ### Frontend (React + Vite + React Flow)
 

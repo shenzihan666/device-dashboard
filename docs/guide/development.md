@@ -6,9 +6,10 @@ This project uses **uv** (`uv.lock` at repo root).
 
 ```bash
 uv sync                    # install deps + dev group (pytest, ruff, pre-commit)
-uv run pytest              # backend tests (see also pre-push hook)
-uv run ruff check .        # optional manual lint
-uv run ruff format .       # optional manual format
+uv run pytest              # backend tests under tests/ (see also pre-push hook)
+uv run alembic upgrade head   # apply DB migrations (optional in dev; tables are also created on startup)
+uv run ruff check backend tests scripts   # optional manual lint (matches pre-commit file filter)
+uv run ruff format backend tests scripts   # optional manual format
 ```
 
 ## Frontend

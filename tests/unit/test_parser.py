@@ -1,6 +1,6 @@
 """Golden-line tests for each log shape parser."""
 
-from backend.events import (
+from backend.core.domain.events import (
     AI_HEALTH_CHECK,
     AI_SERVER_OBSERVED,
     DEVICE_ERROR,
@@ -8,7 +8,7 @@ from backend.events import (
     METRIC_EVENT,
     SIDECAR_ERROR,
 )
-from backend.parser import (
+from backend.core.services.parser import (
     parse_ai_server,
     parse_device_error,
     parse_health_check,

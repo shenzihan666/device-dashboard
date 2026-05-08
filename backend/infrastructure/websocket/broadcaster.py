@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import asyncio
 import json
-import logging
 from typing import Any
 
+import structlog
 from fastapi import WebSocket
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class Broadcaster:
@@ -23,12 +23,12 @@ class Broadcaster:
         await ws.accept()
         async with self._lock:
             self._clients.add(ws)
-        logger.info("WS client connected (%d total)", len(self._clients))
+        logger.info("ws_client_connected", total=len(self._clients))
 
     async def disconnect(self, ws: WebSocket) -> None:
         async with self._lock:
             self._clients.discard(ws)
-        logger.info("WS client disconnected (%d remaining)", len(self._clients))
+        logger.info("ws_client_disconnected", remaining=len(self._clients))
 
     async def broadcast(self, message: dict[str, Any]) -> None:
         """Send a JSON message to every connected client."""

@@ -9,6 +9,7 @@ __pycache__/
 *.pyo
 .pytest_cache/
 .ruff_cache/
+*.egg-info/
 
 # Frontend (Vite)
 frontend/node_modules/

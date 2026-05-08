@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
-import type { ConnectionEvent } from '../services/api';
+import { useState } from 'react';
+import { fetchLangsmithTrace, type ConnectionEvent } from '../services/api';
 
 interface DetailDrawerProps {
   event: ConnectionEvent;
@@ -13,6 +14,27 @@ function formatTime(tsNs: number | undefined | null): string {
 }
 
 export default function DetailDrawer({ event, onClose }: DetailDrawerProps) {
+  const [langsmithBusy, setLangsmithBusy] = useState(false);
+  const [langsmithErr, setLangsmithErr] = useState<string | null>(null);
+
+  const handleOpenLangsmith = async () => {
+    if (!event.request_id) return;
+    setLangsmithErr(null);
+    setLangsmithBusy(true);
+    try {
+      const data = await fetchLangsmithTrace(event.request_id);
+      if (data.trace_url) {
+        window.open(data.trace_url, '_blank', 'noopener,noreferrer');
+      } else {
+        setLangsmithErr('No trace URL returned');
+      }
+    } catch (e) {
+      setLangsmithErr(e instanceof Error ? e.message : 'Lookup failed');
+    } finally {
+      setLangsmithBusy(false);
+    }
+  };
+
   return (
     <div className="fixed top-0 right-0 w-[420px] h-full bg-white border-l border-geist-border z-50 flex flex-col shadow-[0_8px_30px_rgba(0,0,0,0.06)] animate-slide-in">
       {/* Header */}
@@ -57,14 +79,19 @@ export default function DetailDrawer({ event, onClose }: DetailDrawerProps) {
         )}
 
         {event.request_id && (
-          <a
-            className="inline-block mt-4 px-3 py-1.5 bg-geist-fg text-white rounded-md text-xs font-medium no-underline hover:bg-black transition-colors"
-            href={`/api/langsmith/trace?request_id=${encodeURIComponent(event.request_id)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open in LangSmith
-          </a>
+          <div className="mt-4 space-y-1">
+            <button
+              type="button"
+              className="inline-block px-3 py-1.5 bg-geist-fg text-white rounded-md text-xs font-medium hover:bg-black transition-colors disabled:opacity-50"
+              disabled={langsmithBusy}
+              onClick={() => void handleOpenLangsmith()}
+            >
+              {langsmithBusy ? 'Opening…' : 'Open in LangSmith'}
+            </button>
+            {langsmithErr && (
+              <div className="text-xs text-red-600">{langsmithErr}</div>
+            )}
+          </div>
         )}
       </div>
     </div>

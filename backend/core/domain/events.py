@@ -1,4 +1,4 @@
-"""Event dataclass hierarchy for all parsed and synthetic events."""
+"""Event entity and kind constants for the connection dashboard domain."""
 
 from __future__ import annotations
 

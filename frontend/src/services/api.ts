@@ -27,10 +27,29 @@ export interface NodePosition {
   y: number;
 }
 
+interface ApiEnvelope<T> {
+  success: boolean;
+  data?: T;
+  error?: string | null;
+  error_code?: string | null;
+  meta?: Record<string, unknown> | null;
+}
+
+async function readEnvelope<T>(res: Response): Promise<T> {
+  const body = (await res.json()) as ApiEnvelope<T>;
+  if (!res.ok || body.success === false) {
+    throw new Error(body.error || `HTTP ${res.status}`);
+  }
+  if (body.data === undefined || body.data === null) {
+    throw new Error('Empty response data');
+  }
+  return body.data;
+}
+
 export async function getState(atNs?: number): Promise<StateSnapshot> {
   const url = atNs != null ? `/api/state?at=${atNs}` : '/api/state';
   const res = await fetch(url);
-  return res.json();
+  return readEnvelope<StateSnapshot>(res);
 }
 
 export async function getEvents(params?: {
@@ -43,33 +62,54 @@ export async function getEvents(params?: {
   if (params?.from) search.set('from', String(params.from));
   if (params?.to) search.set('to', String(params.to));
   const res = await fetch(`/api/events?${search.toString()}`);
-  return res.json();
+  return readEnvelope<ConnectionEvent[]>(res);
 }
 
 export async function getTimeRange(): Promise<{ min_ns: number | null; max_ns: number | null }> {
   const res = await fetch('/api/time_range');
-  return res.json();
+  return readEnvelope<{ min_ns: number | null; max_ns: number | null }>(res);
 }
 
-export async function getDensity(fromNs: number, toNs: number, buckets = 200): Promise<{ ts_ns: number; count: number }[]> {
+export async function getDensity(
+  fromNs: number,
+  toNs: number,
+  buckets = 200,
+): Promise<{ ts_ns: number; count: number }[]> {
   const res = await fetch(`/api/density?from=${fromNs}&to=${toNs}&buckets=${buckets}`);
-  return res.json();
+  return readEnvelope<{ ts_ns: number; count: number }[]>(res);
 }
 
 export async function getLayout(): Promise<NodePosition[]> {
   const res = await fetch('/api/layout');
-  const data = await res.json();
+  const data = await readEnvelope<{ positions: NodePosition[] }>(res);
   return data.positions || [];
 }
 
 export async function saveLayout(items: NodePosition[]): Promise<void> {
-  await fetch('/api/layout', {
+  const res = await fetch('/api/layout', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(items),
+    body: JSON.stringify({ positions: items }),
   });
+  await readEnvelope<{ saved: number }>(res);
 }
 
 export async function resetLayout(): Promise<void> {
-  await fetch('/api/layout', { method: 'DELETE' });
+  const res = await fetch('/api/layout', { method: 'DELETE' });
+  await readEnvelope<{ cleared: boolean }>(res);
+}
+
+/** LangSmith trace summary returned inside the API envelope `data`. */
+export interface LangsmithTraceSummary {
+  run_id: string;
+  name?: string;
+  status?: string;
+  latency_s?: number | null;
+  error?: string | null;
+  trace_url?: string | null;
+}
+
+export async function fetchLangsmithTrace(requestId: string): Promise<LangsmithTraceSummary> {
+  const res = await fetch(`/api/langsmith/trace?request_id=${encodeURIComponent(requestId)}`);
+  return readEnvelope<LangsmithTraceSummary>(res);
 }

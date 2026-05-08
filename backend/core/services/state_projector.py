@@ -1,7 +1,8 @@
 """In-memory state projection: detects server switches, device/host offline/online.
 
 The StateProjector maintains a rolling view of current connections and emits
-synthetic events when transitions are detected.
+synthetic events when transitions are detected. Pure domain logic with no
+infrastructure dependencies.
 """
 
 from __future__ import annotations
@@ -9,7 +10,7 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from backend.events import (
+from backend.core.domain.events import (
     AI_HEALTH_CHECK,
     AI_SERVER_OBSERVED,
     SIDECAR_ERROR,
@@ -30,28 +31,21 @@ class StateProjector:
     Feed events via ``process(event)``; it returns a (possibly empty) list
     of synthetic events to persist.
 
-    ``check_offline()`` should be called periodically (e.g. every 30s) to
-    detect devices/hosts that have gone silent.
+    ``check_offline()`` should be called periodically to detect devices/hosts
+    that have gone silent.
     """
 
     def __init__(self, offline_grace_ns: int | None = None) -> None:
         self.offline_grace_ns = offline_grace_ns or 90 * _NANO
 
-        # device_serial -> current AI URL
         self.current_url: dict[str, str] = {}
-        # device_serial -> last event ts_ns
         self.device_last_seen: dict[str, int] = {}
-        # device_serial -> True if currently marked offline
         self.device_offline: dict[str, bool] = {}
 
-        # host -> last health ts_ns
         self.host_last_seen: dict[str, int] = {}
-        # host -> True if currently marked offline
         self.host_offline: dict[str, bool] = {}
 
-        # host -> device_serial set
         self.host_devices: dict[str, set[str]] = {}
-        # device_serial -> host
         self.device_host: dict[str, str] = {}
 
     def process(self, event: Event) -> list[Event]:
@@ -61,12 +55,10 @@ class StateProjector:
         serial = event.device_serial
         host = event.host
 
-        # Update host ↔ device mapping
         if host and serial:
             self.host_devices.setdefault(host, set()).add(serial)
             self.device_host[serial] = host
 
-        # Track device activity
         if serial:
             self.device_last_seen[serial] = event.ts_ns
 
@@ -81,7 +73,6 @@ class StateProjector:
                     )
                 )
 
-        # Track host activity for health-related events
         if host and event.kind in (AI_HEALTH_CHECK, SIDECAR_ERROR):
             self.host_last_seen[host] = event.ts_ns
 
@@ -95,7 +86,6 @@ class StateProjector:
                     )
                 )
 
-        # Detect server switch
         if event.kind == AI_SERVER_OBSERVED and serial and event.ai_url:
             prev = self.current_url.get(serial)
             if prev is not None and prev != event.ai_url:
@@ -166,12 +156,10 @@ class StateProjector:
                 "last_seen_ns": self.device_last_seen.get(serial),
             }
 
-            # Server node
             if url not in servers:
                 servers[url] = {"url": url, "device_count": 0}
             servers[url]["device_count"] += 1
 
-            # Host node
             if host and host not in hosts:
                 host_offline = self.host_offline.get(host, False)
                 hosts[host] = {
@@ -181,7 +169,6 @@ class StateProjector:
                     "device_count": len(self.host_devices.get(host, set())),
                 }
 
-            # Edges
             if host:
                 edges.append({"from": serial, "to": host, "type": "device_host"})
             edges.append(

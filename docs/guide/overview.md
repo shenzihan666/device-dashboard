@@ -4,8 +4,8 @@ The **WeCom AI Connection Dashboard** is a real-time operations view for WeCom (
 
 ## What it does
 
-- Polls **Grafana Loki** (`wecom-sidecar-logs`) on a fixed interval, parses structured log lines into **connection events**, and persists them in **SQLite**.
-- Exposes a **FastAPI** service with REST and WebSocket endpoints.
+- Polls **Grafana Loki** (`wecom-sidecar-logs`) on a fixed interval, parses structured log lines into **connection events**, and persists them in **SQLite** via **SQLAlchemy** (async) with **Alembic** migrations.
+- Exposes a **FastAPI** service with REST and WebSocket endpoints (layered `backend/` layout: `core/`, `infrastructure/`, `api/`).
 - Serves a **React + Vite** single-page app that shows:
   - A **live workflow-style graph** of servers, desktop/device nodes, and hosts (see [Frontend](./frontend.md)).
   - An **event feed** and **timeline** for replay and inspection.

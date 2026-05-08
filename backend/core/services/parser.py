@@ -7,7 +7,7 @@ import json
 import re
 from typing import Any
 
-from backend.events import (
+from backend.core.domain.events import (
     AI_HEALTH_CHECK,
     AI_SERVER_OBSERVED,
     DEVICE_ERROR,
@@ -17,12 +17,8 @@ from backend.events import (
     Event,
 )
 
-# ── AI Server observed ──────────────────────────────────────────────────
-# Example: [10AE9X304J0033Z] AI Server: http://118.31.238.44:8000/chat
 _RE_AI_SERVER = re.compile(r"\[(?P<serial>[A-Z0-9]+)\]\s+AI Server:\s+(?P<url>https?://[^\s]+)")
 
-# ── AI Health Check ─────────────────────────────────────────────────────
-# Example: [AIHealthChecker] status=healthy network=reachable http=alive inference=None time=94ms
 _RE_HEALTH = re.compile(
     r"\[AIHealthChecker\]\s+"
     r"status=(?P<status>\S+)\s+"
@@ -32,25 +28,16 @@ _RE_HEALTH = re.compile(
     r"time=(?P<time_ms>\d+)ms"
 )
 
-# ── Sidecar transient error ─────────────────────────────────────────────
-# Example: Transient error (attempt 1/3): Server disconnected, reconnecting in 0.5s...
 _RE_SIDECAR_ERR = re.compile(
     r"Transient error \(attempt (?P<attempt>\d+)/(?P<max_attempts>\d+)\):\s+(?P<message>.+)"
 )
 
-# ── Per-device error ────────────────────────────────────────────────────
-# Example: [10AE9X304J0033Z] Error: Server disconnected
 _RE_DEVICE_ERR = re.compile(r"\[(?P<serial>[A-Z0-9]+)\]\s+Error:\s+(?P<message>.+)")
 
-# ── Host/device mapping from ADB traces ─────────────────────────────────
-# Example: [ADB_TRACE] serial=10AEC61XMY00773 pid=7612 ...
 _RE_SERIAL_IN_BODY = re.compile(r"serial=(?P<serial>[A-Z0-9]{6,})")
 
-# ── Device serial from bracket prefix ───────────────────────────────────
 _RE_BRACKET_SERIAL = re.compile(r"\[(?P<serial>[A-Z0-9]{8,})\]")
 
-# ── Metrics logger JSON ────────────────────────────────────────────────
-# The JSON blob starts after `metrics_logger:_emit:NNN | `
 _RE_METRICS_JSON = re.compile(r"metrics_logger:_emit:\d+\s*\|\s*(?P<json>\{.+)")
 
 
@@ -154,7 +141,7 @@ def parse_metrics_event(line: str, ts_ns: int, host: str | None) -> Event | None
 
 
 def parse_host_device_map(line: str, ts_ns: int, host: str | None) -> Event | None:
-    """Extract host↔device serial mapping from ADB trace or bracket-prefix lines."""
+    """Extract host<->device serial mapping from ADB trace or bracket-prefix lines."""
     m = _RE_SERIAL_IN_BODY.search(line)
     if not m:
         m = _RE_BRACKET_SERIAL.search(line)
@@ -174,10 +161,7 @@ def parse_row(
     labels: str | dict | None,
     ref: str,
 ) -> Event | None:
-    """Route a raw log row to the appropriate parser based on the query ref.
-
-    ref is the Loki query refId ("A".."E") so we know which parser to try first.
-    """
+    """Route a raw log row to the appropriate parser based on the query ref."""
     host = _extract_host_from_labels(labels)
 
     if ref == "A":

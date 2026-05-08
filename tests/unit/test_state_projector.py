@@ -1,6 +1,6 @@
 """Tests for switch detection, offline/online logic in StateProjector."""
 
-from backend.events import (
+from backend.core.domain.events import (
     AI_HEALTH_CHECK,
     AI_SERVER_OBSERVED,
     SYNTH_DEVICE_OFFLINE,
@@ -10,7 +10,7 @@ from backend.events import (
     SYNTH_SWITCHED,
     Event,
 )
-from backend.state import StateProjector
+from backend.core.services.state_projector import StateProjector
 
 _NANO = 1_000_000_000
 HOST = "DESKTOP-TEST"

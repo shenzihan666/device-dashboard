@@ -31,13 +31,69 @@ Open `http://localhost:8090/`.
 
 ```bash
 # Terminal A (repo root)
-uv run uvicorn backend.main:app --host 0.0.0.0 --port 8090
+uv run uvicorn backend.main:app --host 0.0.0.0 --port 8090 --reload
 
 # Terminal B
 cd frontend && npm install && npm run dev    # http://localhost:5173
 ```
 
 Vite proxies `/api` and `/ws` to port **8090**.
+
+## Backend Architecture (v2)
+
+The backend follows **Clean Architecture** with three layers:
+
+```
+backend/
+├── core/               # Domain layer (zero framework dependencies)
+│   ├── domain/         # Entities, value objects, event kinds
+│   ├── ports/          # Protocol interfaces (repositories, services)
+│   └── services/       # Domain services (StateProjector, Parser, Poller)
+├── infrastructure/     # Adapters implementing domain ports
+│   ├── database/       # SQLAlchemy ORM + async repositories
+│   ├── external/       # Grafana (httpx) and LangSmith clients
+│   └── websocket/      # WebSocket broadcaster
+├── api/                # Presentation layer
+│   ├── routes/         # FastAPI routers split by resource
+│   ├── schemas/        # Pydantic request/response models
+│   ├── dependencies.py # FastAPI Depends() DI providers
+│   ├── middleware.py   # Request ID, timing, CORS
+│   └── exception_handlers.py  # Unified error responses
+├── config.py           # pydantic-settings typed configuration
+├── logging_config.py   # structlog setup (JSON/console)
+└── main.py             # App factory + lifespan
+```
+
+Key improvements over v1:
+- **SQLAlchemy 2.0 async** + Alembic migrations (replaces raw `sqlite3`)
+- **FastAPI `Depends()`** for all services (replaces module-level globals)
+- **Pydantic schemas** for all request/response validation
+- **Unified `APIResponse` envelope** across all endpoints
+- **structlog** with correlation IDs (replaces `logging.basicConfig`)
+- **Custom exception hierarchy** with proper HTTP status codes
+- **httpx async** Grafana client (replaces sync `requests` + `pandas`)
+
+## Database Migrations
+
+```bash
+# Apply migrations
+uv run alembic upgrade head
+
+# Auto-generate a new migration after model changes
+uv run alembic revision --autogenerate -m "description"
+```
+
+## Testing
+
+```bash
+# Run all tests
+uv run pytest
+
+# Run specific test categories
+uv run pytest tests/unit/       # Domain logic only
+uv run pytest tests/api/        # HTTP contract tests
+uv run pytest tests/integration/ # Repository + DB tests
+```
 
 ## Git hooks (pre-commit)
 
@@ -48,7 +104,7 @@ uv run pre-commit run --all-files
 uv run pre-commit run --hook-stage pre-push --all-files
 ```
 
-## Out of scope (v1)
+## Out of scope (v2)
 
 - Authentication / multi-tenant
 - HTTPS (terminate at reverse proxy)

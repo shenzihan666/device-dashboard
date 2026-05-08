@@ -1,21 +1,50 @@
+"""Typed application settings backed by pydantic-settings.
+
+All values can be overridden via environment variables or a `.env` file.
+Invalid values are caught at import time (fail-fast).
+"""
+
 from __future__ import annotations
 
-import os
+from functools import lru_cache
 from pathlib import Path
 
-from dotenv import load_dotenv
-
-load_dotenv()
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-GRAFANA_URL: str = os.getenv("GRAFANA_URL", "https://mynameisi.grafana.net")
-API_TOKEN: str = os.getenv("API_TOKEN", "")
-LOKI_UID: str = os.getenv("LOKI_DATASOURCE_UID", "grafanacloud-logs")
-LANGSMITH_API_KEY: str = os.getenv("LANGSMITH_API_KEY", "")
 
-POLL_INTERVAL_S: int = int(os.getenv("POLL_INTERVAL_S", "10"))
-BACKFILL_HOURS: int = int(os.getenv("BACKFILL_HOURS", "24"))
-OFFLINE_GRACE_S: int = int(os.getenv("OFFLINE_GRACE_S", "90"))
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
-DB_PATH: Path = BASE_DIR / "data" / "events.db"
+    # Grafana / Loki
+    grafana_url: str = "https://mynameisi.grafana.net"
+    api_token: str = ""
+    loki_datasource_uid: str = "grafanacloud-logs"
+
+    # LangSmith
+    langsmith_api_key: str = ""
+
+    # Polling
+    poll_interval_s: int = 10
+    backfill_hours: int = 24
+    offline_grace_s: int = 90
+
+    # Database
+    db_url: str = f"sqlite+aiosqlite:///{BASE_DIR / 'data' / 'events.db'}"
+
+    # Logging
+    log_level: str = "INFO"
+    log_format: str = "console"  # "json" for production, "console" for dev
+
+    # CORS
+    cors_origins: list[str] = ["*"]
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()

@@ -9,6 +9,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Added
 
 - Enterprise-grade documentation structure with categorized folders, templates, and seed documents.
+- Backend Clean Architecture layout: `backend/core`, `backend/infrastructure`, `backend/api` with FastAPI `Depends()` wiring.
+- SQLAlchemy 2.0 async repositories, Alembic migration scaffold (`alembic/`), and pydantic-settings-based configuration.
+- Unified JSON `APIResponse` envelope, Pydantic request/response schemas, global exception handlers, and structlog-based logging with request correlation.
+- API contract tests under `tests/api/`, unit tests under `tests/unit/`, and shared async fixtures in `tests/conftest.py`.
+
+### Changed
+
+- **Breaking:** REST responses are wrapped in `{ success, data, error, error_code, meta }`; `PUT /api/layout` expects `{ "positions": [...] }` instead of a bare JSON array.
+- Grafana client is async **httpx** (`backend/infrastructure/external/grafana_client.py`); pandas and sync `requests` usage removed from the backend path.
+- Frontend `src/services/api.ts` unwraps the envelope for all dashboard API calls; LangSmith opens `trace_url` after a client-side fetch.
+
+### Removed
+
+- Flat modules `backend/api.py`, `backend/store.py`, `backend/poller.py`, `backend/state.py`, `backend/parser.py`, `backend/events.py`, `backend/ws.py`, `backend/grafana_client.py`, `backend/langsmith_link.py` (logic moved into the layered packages above).
 
 ## [0.1.0] - 2025-01-15
 
