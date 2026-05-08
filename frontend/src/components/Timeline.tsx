@@ -27,12 +27,40 @@ export default function Timeline({ events, appMode, onSeek }: TimelineProps) {
     }).catch(() => {});
   }, []);
 
+  // Update maxNs from latest event in live mode
+  useEffect(() => {
+    if (appMode === 'live' && events.length > 0) {
+      const latestNs = Math.max(...events.map(e => e.ts_ns));
+      setMaxNs(prev => {
+        if (prev === null || latestNs > prev) return latestNs;
+        return prev;
+      });
+    }
+  }, [appMode, events]);
+
   // Keep cursor at max in live mode
   useEffect(() => {
     if (appMode === 'live' && maxNs) {
       setCursorNs(maxNs);
     }
   }, [appMode, maxNs, events]);
+
+  // Periodic density refresh in live mode
+  useEffect(() => {
+    if (appMode !== 'live') return;
+    const interval = setInterval(async () => {
+      try {
+        const range = await getTimeRange();
+        if (range.min_ns && range.max_ns) {
+          setMinNs(range.min_ns);
+          setMaxNs(range.max_ns);
+          const d = await getDensity(range.min_ns, range.max_ns, 200);
+          setDensity(d);
+        }
+      } catch { /* ignore */ }
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, [appMode]);
 
   // Draw canvas
   const draw = useCallback(() => {
