@@ -1,13 +1,16 @@
 import { useState, useCallback, useEffect } from 'react';
 import { ReactFlowProvider } from '@xyflow/react';
+import { Settings as SettingsIcon } from 'lucide-react';
 import ConnectionCanvas from './components/canvas/ConnectionCanvas';
 import CanvasToolbar from './components/canvas/CanvasToolbar';
 import EventFeed from './components/EventFeed';
 import Timeline from './components/Timeline';
 import DetailDrawer from './components/DetailDrawer';
+import SettingsDrawer from './components/SettingsDrawer';
 import { useWebSocket } from './hooks/useWebSocket';
 import { useGraphState } from './hooks/useGraphState';
 import { useLayout } from './hooks/useLayout';
+import { useAppSettings } from './hooks/useAppSettings';
 import type { ConnectionEvent } from './services/api';
 
 type AppMode = 'live' | 'replay';
@@ -17,6 +20,8 @@ export default function App() {
   const [appMode, setAppMode] = useState<AppMode>('live');
   const [canvasMode, setCanvasMode] = useState<CanvasMode>('view');
   const [selectedEvent, setSelectedEvent] = useState<ConnectionEvent | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const { settings: appSettings, update: updateAppSettings } = useAppSettings();
 
   const { wsStatus, lastEvent } = useWebSocket(appMode === 'live');
   const { snapshot, events, setEvents, seekTo, refreshState, loadEvents } = useGraphState(appMode);
@@ -73,6 +78,14 @@ export default function App() {
             >REPLAY</button>
           </div>
 
+          <button
+            aria-label="Settings"
+            onClick={() => setSettingsOpen(true)}
+            className="p-1.5 rounded-md text-geist-fg-muted hover:text-geist-fg hover:bg-geist-bg-muted transition-colors"
+          >
+            <SettingsIcon className="w-4 h-4" />
+          </button>
+
           <div className="ml-auto flex items-center gap-2 text-xs text-geist-fg-muted">
             <span className={`w-2 h-2 rounded-full inline-block ${
               wsStatus === 'connected' ? 'bg-geist-success' :
@@ -115,9 +128,21 @@ export default function App() {
         </div>
       </div>
 
-      {/* Detail drawer */}
+      {/* Settings drawer (left) */}
+      <SettingsDrawer
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        settings={appSettings}
+        onUpdate={updateAppSettings}
+      />
+
+      {/* Detail drawer (right) */}
       {selectedEvent && (
-        <DetailDrawer event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+        <DetailDrawer
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+          langsmithEnabled={appSettings.langsmith_enabled}
+        />
       )}
     </ReactFlowProvider>
   );

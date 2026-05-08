@@ -12,10 +12,11 @@ const KIND_CONFIG: Record<string, { cls: string; label: string }> = {
   sidecar_error: { cls: 'bg-red-50 text-red-600', label: 'ERROR' },
   device_error: { cls: 'bg-red-50 text-red-600', label: 'DEV ERR' },
   metric_event: { cls: 'bg-amber-50 text-amber-700', label: 'METRIC' },
-  host_device_map: { cls: 'bg-blue-50 text-blue-600', label: 'MAP' },
   device_processing: { cls: 'bg-red-50 text-red-600', label: 'PROCESSING' },
   device_idle: { cls: 'bg-emerald-50 text-emerald-600', label: 'IDLE' },
 };
+
+const HIDDEN_KINDS = new Set(['host_device_map']);
 
 function formatTime(tsNs: number | undefined | null): string {
   if (!tsNs) return '--:--:--';
@@ -35,21 +36,22 @@ interface EventFeedProps {
 
 export default function EventFeed({ events, onEventClick }: EventFeedProps) {
   const listRef = useRef<HTMLDivElement>(null);
+  const visibleEvents = events.filter((ev) => !HIDDEN_KINDS.has(ev.kind));
 
   useEffect(() => {
     if (listRef.current) {
       listRef.current.scrollTop = 0;
     }
-  }, [events.length]);
+  }, [visibleEvents.length]);
 
   return (
     <>
       <div className="px-3.5 py-2.5 text-[11px] font-medium uppercase tracking-wider text-geist-fg-subtle border-b border-geist-border flex justify-between items-center">
         <span>Events</span>
-        <span className="text-geist-fg font-mono">{events.length}</span>
+        <span className="text-geist-fg font-mono">{visibleEvents.length}</span>
       </div>
       <div ref={listRef} className="flex-1 overflow-y-auto">
-        {events.map((ev, i) => {
+        {visibleEvents.map((ev, i) => {
           const badge = getBadge(ev.kind);
           return (
             <div
@@ -77,7 +79,7 @@ export default function EventFeed({ events, onEventClick }: EventFeedProps) {
             </div>
           );
         })}
-        {events.length === 0 && (
+        {visibleEvents.length === 0 && (
           <div className="px-3.5 py-8 text-center text-geist-fg-subtle text-xs">
             No events yet
           </div>

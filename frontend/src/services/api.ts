@@ -99,6 +99,29 @@ export async function resetLayout(): Promise<void> {
   await readEnvelope<{ cleared: boolean }>(res);
 }
 
+/* ── App settings (data-source toggles) ── */
+
+export interface AppSettingsState {
+  grafana_enabled: boolean;
+  langsmith_enabled: boolean;
+}
+
+export async function getAppSettings(): Promise<AppSettingsState> {
+  const res = await fetch('/api/settings');
+  return readEnvelope<AppSettingsState>(res);
+}
+
+export async function updateAppSettings(
+  patch: Partial<AppSettingsState>,
+): Promise<AppSettingsState> {
+  const res = await fetch('/api/settings', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+  });
+  return readEnvelope<AppSettingsState>(res);
+}
+
 /** LangSmith trace summary returned inside the API envelope `data`. */
 export interface LangsmithTraceSummary {
   run_id: string;

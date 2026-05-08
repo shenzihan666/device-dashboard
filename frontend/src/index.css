@@ -42,6 +42,14 @@ html, body, #root {
   animation: slide-in 0.2s ease-out;
 }
 
+@keyframes slide-in-left {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+.animate-slide-in-left {
+  animation: slide-in-left 0.2s ease-out;
+}
+
 /* React Flow overrides for light theme */
 .react-flow__background {
   background-color: var(--bg-primary) !important;

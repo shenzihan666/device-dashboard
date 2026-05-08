@@ -6,7 +6,7 @@ Environment variable names follow the usual uppercase convention; they map to th
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `API_TOKEN` | *(empty)* | Grafana service account token (`glsa_...`). When unset, the Loki poller does not start (offline/demo mode). |
+| `API_TOKEN` | *(empty)* | Grafana service account token (`glsa_...`). The Loki poller also requires **`grafana_enabled: true`** in persisted app settings (`PUT /api/settings` or defaults). When either is missing/false, Grafana polling stays off. |
 | `GRAFANA_URL` | `https://mynameisi.grafana.net` | Grafana instance base URL |
 | `LOKI_DATASOURCE_UID` | `grafanacloud-logs` | Loki datasource UID |
 | `LANGSMITH_API_KEY` | *(optional)* | Enables LangSmith trace lookup from `/api/langsmith/trace` |
@@ -19,6 +19,10 @@ Environment variable names follow the usual uppercase convention; they map to th
 | `CORS_ORIGINS` | `["*"]` | Allowed CORS origins; use a JSON array in `.env` when overriding (e.g. `["http://localhost:5173"]`) |
 
 Secrets and local overrides should stay in `.env` (gitignored). See the repository `.env.example` for the canonical template.
+
+## Runtime toggles (database)
+
+**Data source** switches (`grafana_enabled`, `langsmith_enabled`) are stored in the **`app_settings`** table and read at startup. Defaults are Grafana **off** and LangSmith **on** until you change them via the UI or `PUT /api/settings`. They survive process restarts independently of `.env`.
 
 ## Migrations
 

@@ -23,6 +23,7 @@ Zero framework dependencies. Contains:
 - **`services/state_projector.py`** — In-memory CQRS-style projection: processes events, detects switches, offline/online transitions
 - **`services/parser.py`** — Regex/JSON parsers for 5 log-line shapes
 - **`services/poller_service.py`** — Background polling orchestration (Loki → parse → persist → project → broadcast)
+- **`services/app_settings.py`** — Defaults and typed loader for persisted dashboard toggles (`grafana_enabled`, `langsmith_enabled`)
 
 ### Infrastructure Layer — `backend/infrastructure/`
 
@@ -30,7 +31,7 @@ Concrete implementations of domain ports:
 
 - **`database/models.py`** — SQLAlchemy 2.0 ORM table definitions
 - **`database/session.py`** — Async engine and session factory
-- **`database/repositories/`** — Repository implementations using SQLAlchemy async sessions
+- **`database/repositories/`** — Repository implementations using SQLAlchemy async sessions (including `settings_repo` for `app_settings`)
 - **`external/grafana_client.py`** — Async httpx-based Grafana/Loki HTTP client
 - **`external/langsmith_client.py`** — LangSmith trace lookup adapter
 - **`websocket/broadcaster.py`** — WebSocket pub-sub fan-out
@@ -39,7 +40,7 @@ Concrete implementations of domain ports:
 
 HTTP/WebSocket interface:
 
-- **`routes/`** — FastAPI routers split by resource (events, state, entities, layout, status, langsmith, websocket)
+- **`routes/`** — FastAPI routers split by resource (events, state, entities, layout, settings, status, langsmith, websocket)
 - **`schemas/`** — Pydantic models for request validation and response serialization
 - **`dependencies.py`** — `Depends()` providers wiring repositories and services
 - **`middleware.py`** — Request ID correlation, response timing, CORS
@@ -72,7 +73,7 @@ Grafana Loki → GrafanaClient (httpx async)
 - **Engine**: SQLite via `aiosqlite` (configurable via `DB_URL`)
 - **ORM**: SQLAlchemy 2.0 with `mapped_column` declarative style
 - **Migrations**: Alembic with async engine support
-- **Schema**: 4 tables (`events`, `entities`, `cursors`, `node_positions`)
+- **Schema**: 5 tables (`events`, `entities`, `cursors`, `node_positions`, `app_settings`)
 
 ## Configuration
 

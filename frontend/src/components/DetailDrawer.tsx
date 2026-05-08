@@ -5,6 +5,7 @@ import { fetchLangsmithTrace, type ConnectionEvent } from '../services/api';
 interface DetailDrawerProps {
   event: ConnectionEvent;
   onClose: () => void;
+  langsmithEnabled?: boolean;
 }
 
 function formatTime(tsNs: number | undefined | null): string {
@@ -13,7 +14,7 @@ function formatTime(tsNs: number | undefined | null): string {
   return d.toLocaleString('zh-CN', { hour12: false });
 }
 
-export default function DetailDrawer({ event, onClose }: DetailDrawerProps) {
+export default function DetailDrawer({ event, onClose, langsmithEnabled = true }: DetailDrawerProps) {
   const [langsmithBusy, setLangsmithBusy] = useState(false);
   const [langsmithErr, setLangsmithErr] = useState<string | null>(null);
 
@@ -78,7 +79,7 @@ export default function DetailDrawer({ event, onClose }: DetailDrawerProps) {
           </div>
         )}
 
-        {event.request_id && (
+        {event.request_id && langsmithEnabled && (
           <div className="mt-4 space-y-1">
             <button
               type="button"

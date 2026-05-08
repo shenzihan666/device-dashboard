@@ -4,6 +4,7 @@ data/
 
 # Local IDE / agent settings (do not commit)
 .claude/settings.local.json
+.agents/
 __pycache__/
 *.pyc
 *.pyo

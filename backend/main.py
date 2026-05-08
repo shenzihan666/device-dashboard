@@ -14,6 +14,7 @@ from backend.api.exception_handlers import register_exception_handlers
 from backend.api.middleware import register_middleware
 from backend.api.routes import all_routers
 from backend.config import get_settings
+from backend.core.services.app_settings import AppSettingsState, load_effective
 from backend.core.services.poller_service import PollerService
 from backend.core.services.state_projector import StateProjector
 from backend.infrastructure.database.models import Base
@@ -23,6 +24,9 @@ from backend.infrastructure.database.repositories.entity_repo import (
 from backend.infrastructure.database.repositories.event_repo import (
     SQLAlchemyCursorRepository,
     SQLAlchemyEventRepository,
+)
+from backend.infrastructure.database.repositories.settings_repo import (
+    SQLAlchemySettingsRepository,
 )
 from backend.infrastructure.database.session import get_session_factory, init_engine
 from backend.infrastructure.external.grafana_client import GrafanaClient
@@ -35,33 +39,34 @@ FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 _NANO = 1_000_000_000
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    settings = get_settings()
-    configure_logging(settings)
+class PollerManager:
+    """Manages the lifecycle of the Grafana Loki poller based on app settings."""
 
-    engine = init_engine(settings)
+    def __init__(
+        self,
+        settings: object,
+        state: StateProjector,
+        broadcaster: Broadcaster,
+    ) -> None:
+        self._settings = settings
+        self._state = state
+        self._broadcaster = broadcaster
+        self._poller: PollerService | None = None
 
-    # Create tables if they don't exist (for dev; production uses Alembic)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    @property
+    def poller(self) -> PollerService | None:
+        return self._poller
 
-    # Ensure data directory exists
-    if settings.db_url.startswith("sqlite"):
-        db_path = settings.db_url.split("///")[-1] if "///" in settings.db_url else None
-        if db_path:
-            Path(db_path).parent.mkdir(parents=True, exist_ok=True)
+    async def apply(self, app_settings: AppSettingsState) -> None:
+        """Start or stop the poller to match *app_settings*."""
+        should_run = app_settings.grafana_enabled and bool(self._settings.api_token)  # type: ignore[attr-defined]
+        if should_run and self._poller is None:
+            await self._start()
+        elif not should_run and self._poller is not None:
+            await self._stop()
 
-    # Initialize shared services
-    state = StateProjector(offline_grace_ns=settings.offline_grace_s * _NANO)
-    broadcaster = Broadcaster()
-
-    app.state.projector = state
-    app.state.broadcaster = broadcaster
-
-    # Start poller if API token is configured
-    poller: PollerService | None = None
-    if settings.api_token:
+    async def _start(self) -> None:
+        settings = self._settings  # type: ignore[attr-defined]
         grafana_client = GrafanaClient(settings.grafana_url, settings.api_token)
         session_factory = get_session_factory()
 
@@ -70,28 +75,65 @@ async def lifespan(app: FastAPI):
             entity_repo = SQLAlchemyEntityRepository(session)
             cursor_repo = SQLAlchemyCursorRepository(session)
 
-            poller = PollerService(
+            self._poller = PollerService(
                 settings=settings,
                 event_repo=event_repo,
                 entity_repo=entity_repo,
                 cursor_repo=cursor_repo,
-                state=state,
-                broadcaster=broadcaster,
+                state=self._state,
+                broadcaster=self._broadcaster,
                 grafana_client=grafana_client,
             )
-            app.state.poller = poller
-            await poller.start()
-    else:
-        logger.warning("api_token_not_set", detail="Poller disabled, running in offline/demo mode")
-        app.state.poller = None
+            await self._poller.start()
+            logger.info("poller_manager_started")
+
+    async def _stop(self) -> None:
+        if self._poller:
+            await self._poller.stop()
+            logger.info("poller_manager_stopped")
+            self._poller = None
+
+    async def shutdown(self) -> None:
+        await self._stop()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    settings = get_settings()
+    configure_logging(settings)
+
+    engine = init_engine(settings)
+
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    if settings.db_url.startswith("sqlite"):
+        db_path = settings.db_url.split("///")[-1] if "///" in settings.db_url else None
+        if db_path:
+            Path(db_path).parent.mkdir(parents=True, exist_ok=True)
+
+    state = StateProjector(offline_grace_ns=settings.offline_grace_s * _NANO)
+    broadcaster = Broadcaster()
+
+    app.state.projector = state
+    app.state.broadcaster = broadcaster
+
+    poller_manager = PollerManager(settings=settings, state=state, broadcaster=broadcaster)
+    app.state.poller_manager = poller_manager
+
+    session_factory = get_session_factory()
+    async with session_factory() as session:
+        settings_repo = SQLAlchemySettingsRepository(session)
+        app_settings = await load_effective(settings_repo)
+
+    await poller_manager.apply(app_settings)
+
+    # Backward-compat: expose .poller for status route
+    app.state.poller = poller_manager.poller
 
     yield
 
-    # Shutdown
-    if poller:
-        await poller.stop()
-    if hasattr(app.state, "_grafana_client"):
-        await app.state._grafana_client.close()
+    await poller_manager.shutdown()
 
 
 def create_app() -> FastAPI:
@@ -104,17 +146,12 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # Middleware (order matters: last added = first executed)
     register_middleware(app, settings)
-
-    # Exception handlers
     register_exception_handlers(app)
 
-    # Routes
     for router in all_routers:
         app.include_router(router)
 
-    # Static file serving for SPA
     _mount_frontend(app)
 
     return app

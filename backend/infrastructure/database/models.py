@@ -59,3 +59,11 @@ class NodePositionModel(Base):
     x: Mapped[float] = mapped_column(Float, nullable=False)
     y: Mapped[float] = mapped_column(Float, nullable=False)
     updated_ns: Mapped[int] = mapped_column(BigInteger, nullable=False)
+
+
+class AppSettingModel(Base):
+    __tablename__ = "app_settings"
+
+    key: Mapped[str] = mapped_column(Text, primary_key=True)
+    value: Mapped[str] = mapped_column(Text, nullable=False)
+    updated_ns: Mapped[int] = mapped_column(BigInteger, nullable=False)

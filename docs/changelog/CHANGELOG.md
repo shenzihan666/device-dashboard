@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Settings UI: gear control next to LIVE/REPLAY opens a left **Settings** drawer with **Data Source** toggles (Grafana Loki polling vs LangSmith trace lookup).
+- `GET` / `PUT /api/settings` — persisted key/value store (`app_settings` table; Alembic revision `002`); defaults: Grafana off, LangSmith on.
+- `PollerManager` in `backend/main.py` starts or stops the Grafana `PollerService` when `grafana_enabled` and `API_TOKEN` allow it, without restarting the app.
+
 ### Fixed
 
 - WebSocket `/ws/live` handler uses `ws.app.state` for the broadcaster (avoids relying on `Request` injection on the websocket route).

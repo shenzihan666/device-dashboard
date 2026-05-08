@@ -2,7 +2,7 @@
 
 Real-time dashboard tracking WeCom client (enterprise WeChat) connections to AI servers.
 
-Polls Grafana Loki (`wecom-sidecar-logs`), parses structured log lines into connection events, persists to SQLite, and pushes updates via WebSocket to a browser SPA with:
+Polls Grafana Loki (`wecom-sidecar-logs`) when **Grafana** is enabled in **Settings** (and `API_TOKEN` is set); otherwise Grafana ingestion stays off by default. Parsed events persist to SQLite and push over WebSocket to a browser SPA with:
 
 - **Live workflow-style graph** — AI Server, desktop/device, and host as card nodes ([React Flow](https://reactflow.dev/) / `@xyflow/react`), dot background, controls, and minimap; **shell UI** uses a minimal light (Vercel-style) chrome around the canvas ([frontend theming](docs/guide/frontend.md#theming))
 - **View / Edit layout** — default view is read-only; **Edit** enables dragging nodes; positions persist in SQLite via `GET/PUT/DELETE /api/layout`

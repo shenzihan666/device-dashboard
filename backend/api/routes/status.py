@@ -19,7 +19,8 @@ async def get_status(
     settings: SettingsDep,
 ) -> APIResponse[dict[str, Any]]:
     mn, mx = await event_repo.get_time_range()
-    poller = getattr(request.app.state, "poller", None)
+    poller_manager = getattr(request.app.state, "poller_manager", None)
+    poller = poller_manager.poller if poller_manager else None
     broadcaster = getattr(request.app.state, "broadcaster", None)
 
     data = {

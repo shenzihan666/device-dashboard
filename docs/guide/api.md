@@ -28,6 +28,8 @@ Errors return `success: false` with `error` and `error_code` (and HTTP 4xx/5xx a
 | GET | `/api/time_range` | Time range for the timeline (`data.min_ns`, `data.max_ns`) |
 | GET | `/api/density` | Histogram buckets for the timeline |
 | GET | `/api/status` | Poller status, WebSocket client count, time range, and poll config |
+| GET | `/api/settings` | App toggles in `data`: `grafana_enabled`, `langsmith_enabled` (defaults apply when keys are absent in the DB) |
+| PUT | `/api/settings` | Partial JSON body with the same boolean fields; persists and applies Grafana poller start/stop immediately |
 | GET | `/api/layout` | Saved positions: `data.positions` as `[{ node_id, x, y }]` |
 | PUT | `/api/layout` | Body `{ "positions": [{ "node_id", "x", "y" }, ...] }` (at least one position) |
 | DELETE | `/api/layout` | Clear saved positions (revert to auto-layout on next load) |
@@ -40,4 +42,4 @@ Errors return `success: false` with `error` and `error_code` (and HTTP 4xx/5xx a
 
 ## Trace drill-through
 
-When LangSmith is configured, event details may include a link to `/api/langsmith/trace?request_id=...` for trace inspection. Missing traces return HTTP 404 with the standard error envelope.
+When LangSmith is enabled in app settings and `LANGSMITH_API_KEY` is set, the event detail UI can open `/api/langsmith/trace?request_id=...` for trace inspection. Missing traces return HTTP 404 with the standard error envelope.
