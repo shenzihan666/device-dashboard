@@ -49,17 +49,15 @@ export default function Timeline({ events, appMode, onSeek }: TimelineProps) {
     const h = canvas.height;
     ctx.clearRect(0, 0, w, h);
 
-    // Background
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, w, h);
 
     if (!minNs || !maxNs || minNs >= maxNs) return;
     const range = maxNs - minNs;
 
-    // Density histogram
     if (density.length > 0) {
       const maxCount = Math.max(...density.map((b) => b.count), 1);
-      ctx.fillStyle = 'rgba(37, 99, 235, 0.15)';
+      ctx.fillStyle = 'rgba(37, 99, 235, 0.18)';
       density.forEach((b) => {
         const x = ((b.ts_ns - minNs) / range) * w;
         const bw = Math.max(1, w / density.length);
@@ -84,8 +82,7 @@ export default function Timeline({ events, appMode, onSeek }: TimelineProps) {
       ctx.fill();
     }
 
-    // Top border
-    ctx.strokeStyle = '#e5e7eb';
+    ctx.strokeStyle = '#ededed';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(0, 0);
@@ -146,9 +143,9 @@ export default function Timeline({ events, appMode, onSeek }: TimelineProps) {
   return (
     <>
       <div className="flex items-center gap-2.5 mb-1">
-        <span className="font-mono text-xs text-foundry-text-dim">{formatTimeDisplay(cursorNs)}</span>
+        <span className="font-mono text-xs text-geist-fg">{formatTimeDisplay(cursorNs)}</span>
         <span className="flex-1" />
-        <span className="font-mono text-xs text-foundry-text-dim">{formatTimeRange()}</span>
+        <span className="font-mono text-xs text-geist-fg-subtle">{formatTimeRange()}</span>
       </div>
       <div
         className="flex-1 relative cursor-pointer"

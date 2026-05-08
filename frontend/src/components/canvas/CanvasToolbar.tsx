@@ -10,12 +10,12 @@ export default function CanvasToolbar({ mode, onModeChange, onResetLayout }: Can
   return (
     <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
       {/* Mode toggle */}
-      <div className="flex gap-0.5 bg-foundry-card border border-foundry-border rounded-lg p-1 shadow-lg">
+      <div className="flex gap-0.5 bg-white border border-geist-border rounded-lg p-0.5 shadow-sm">
         <button
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
             mode === 'view'
-              ? 'bg-foundry-accent/15 text-foundry-accent'
-              : 'text-foundry-text-dim hover:text-foundry-text'
+              ? 'bg-geist-fg text-white'
+              : 'text-geist-fg-muted hover:text-geist-fg hover:bg-geist-bg-muted'
           }`}
           onClick={() => onModeChange('view')}
         >
@@ -25,8 +25,8 @@ export default function CanvasToolbar({ mode, onModeChange, onResetLayout }: Can
         <button
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
             mode === 'edit'
-              ? 'bg-foundry-amber/15 text-foundry-amber'
-              : 'text-foundry-text-dim hover:text-foundry-text'
+              ? 'bg-geist-fg text-white'
+              : 'text-geist-fg-muted hover:text-geist-fg hover:bg-geist-bg-muted'
           }`}
           onClick={() => onModeChange('edit')}
         >
@@ -39,8 +39,8 @@ export default function CanvasToolbar({ mode, onModeChange, onResetLayout }: Can
       {mode === 'edit' && (
         <button
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-            bg-foundry-card border border-foundry-border text-foundry-text-dim
-            hover:text-foundry-red hover:border-foundry-red/50 transition-all shadow-lg"
+            bg-white border border-geist-border text-geist-fg-muted
+            hover:text-red-600 hover:border-red-300 transition-all shadow-sm"
           onClick={onResetLayout}
           title="Reset all node positions to auto-layout"
         >
@@ -51,7 +51,7 @@ export default function CanvasToolbar({ mode, onModeChange, onResetLayout }: Can
 
       {/* Edit mode indicator */}
       {mode === 'edit' && (
-        <div className="px-2.5 py-1 rounded-md bg-foundry-amber/10 border border-foundry-amber/30 text-foundry-amber text-[10px] font-medium uppercase tracking-wider shadow-lg">
+        <div className="px-2.5 py-1 rounded-md bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-medium uppercase tracking-wider shadow-sm">
           Editing
         </div>
       )}

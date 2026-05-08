@@ -44,31 +44,39 @@ export default function App() {
 
   return (
     <ReactFlowProvider>
-      <div className="w-full h-full grid grid-rows-[48px_1fr_80px] grid-cols-[1fr_340px]"
+      <div className="w-full h-full grid grid-rows-[56px_1fr_80px] grid-cols-[1fr_340px]"
         style={{ gridTemplateAreas: '"topbar topbar" "graph feed" "timeline timeline"' }}>
         {/* Top bar */}
-        <header className="flex items-center gap-3.5 px-4 bg-foundry-bg-secondary border-b border-foundry-border z-10"
+        <header className="flex items-center gap-4 px-5 bg-white border-b border-geist-border z-10"
           style={{ gridArea: 'topbar' }}>
-          <span className="text-foundry-accent font-bold text-[15px] tracking-wide whitespace-nowrap">
+          <span className="text-geist-fg font-semibold text-sm tracking-tight whitespace-nowrap">
             &#x25C8; WeCom AI Connections
           </span>
 
-          <div className="flex gap-0.5 bg-foundry-bg rounded-md p-0.5">
+          <div className="flex gap-0.5 bg-geist-bg-muted rounded-md p-0.5">
             <button
-              className={`px-3.5 py-1 rounded text-xs font-medium transition-all ${appMode === 'live' ? 'bg-blue-100 text-foundry-accent' : 'text-foundry-text-dim'}`}
+              className={`px-3.5 py-1.5 rounded text-xs font-medium transition-all ${
+                appMode === 'live'
+                  ? 'bg-white shadow-sm text-geist-fg'
+                  : 'text-geist-fg-muted hover:text-geist-fg'
+              }`}
               onClick={() => handleSetMode('live')}
             >LIVE</button>
             <button
-              className={`px-3.5 py-1 rounded text-xs font-medium transition-all ${appMode === 'replay' ? 'bg-blue-100 text-foundry-accent' : 'text-foundry-text-dim'}`}
+              className={`px-3.5 py-1.5 rounded text-xs font-medium transition-all ${
+                appMode === 'replay'
+                  ? 'bg-white shadow-sm text-geist-fg'
+                  : 'text-geist-fg-muted hover:text-geist-fg'
+              }`}
               onClick={() => handleSetMode('replay')}
             >REPLAY</button>
           </div>
 
-          <div className="ml-auto flex items-center gap-2 text-xs text-foundry-text-dim">
+          <div className="ml-auto flex items-center gap-2 text-xs text-geist-fg-muted">
             <span className={`w-2 h-2 rounded-full inline-block ${
-              wsStatus === 'connected' ? 'bg-foundry-green' :
-              wsStatus === 'connecting' ? 'bg-foundry-amber animate-pulse' :
-              'bg-foundry-red'
+              wsStatus === 'connected' ? 'bg-geist-success' :
+              wsStatus === 'connecting' ? 'bg-geist-warning animate-pulse' :
+              'bg-geist-danger'
             }`} />
             <span>{wsStatus === 'connected' ? 'Connected' : wsStatus === 'connecting' ? 'Connecting...' : 'Disconnected'}</span>
           </div>
@@ -90,13 +98,13 @@ export default function App() {
         </div>
 
         {/* Event feed */}
-        <div className="bg-foundry-bg-secondary border-l border-foundry-border flex flex-col overflow-hidden"
+        <div className="bg-geist-bg-subtle border-l border-geist-border flex flex-col overflow-hidden"
           style={{ gridArea: 'feed' }}>
           <EventFeed events={events} onEventClick={setSelectedEvent} />
         </div>
 
         {/* Timeline */}
-        <div className="bg-foundry-bg-secondary border-t border-foundry-border flex flex-col px-4 py-1.5"
+        <div className="bg-geist-bg-subtle border-t border-geist-border flex flex-col px-4 py-1.5"
           style={{ gridArea: 'timeline' }}>
           <Timeline
             events={events}

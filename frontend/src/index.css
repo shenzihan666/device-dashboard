@@ -4,17 +4,19 @@
 
 :root {
   --bg-primary: #ffffff;
-  --bg-secondary: #f9fafb;
-  --bg-card: #ffffff;
-  --border: #e5e7eb;
-  --text-primary: #111827;
-  --text-secondary: #6b7280;
+  --bg-secondary: #fafafa;
+  --bg-muted: #f5f5f5;
+  --border: #ededed;
+  --border-strong: #e5e5e5;
+  --fg: #0a0a0a;
+  --fg-muted: #525252;
+  --fg-subtle: #8a8a8a;
   --accent: #2563eb;
-  --accent-dim: rgba(37, 99, 235, 0.1);
-  --green: #16a34a;
-  --amber: #d97706;
-  --red: #dc2626;
-  --purple: #7c3aed;
+  --accent-soft: #eff6ff;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --violet: #8b5cf6;
 }
 
 html, body, #root {
@@ -22,13 +24,14 @@ html, body, #root {
   height: 100%;
   margin: 0;
   padding: 0;
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--bg-primary); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #d1d5db; }
+/* Scrollbar styling — thin Vercel-style */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d4d4d4; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #a3a3a3; }
 
 /* Animations */
 @keyframes slide-in {
@@ -44,7 +47,7 @@ html, body, #root {
   background-color: var(--bg-primary) !important;
 }
 .react-flow__minimap {
-  background: rgba(255, 255, 255, 0.9) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
   border: 1px solid var(--border) !important;
   border-radius: 8px !important;
 }
@@ -52,16 +55,17 @@ html, body, #root {
   border: 1px solid var(--border) !important;
   border-radius: 8px !important;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
 }
 .react-flow__controls button {
   background: #ffffff !important;
   border-bottom: 1px solid var(--border) !important;
-  color: #374151 !important;
-  fill: #374151 !important;
+  color: var(--fg-muted) !important;
+  fill: var(--fg-muted) !important;
 }
 .react-flow__controls button:hover {
-  background: #f9fafb !important;
+  background: var(--bg-muted) !important;
 }
 .react-flow__controls button svg {
-  fill: #374151 !important;
+  fill: var(--fg-muted) !important;
 }

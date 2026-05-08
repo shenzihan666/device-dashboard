@@ -33,8 +33,8 @@ Server→device links are drawn as **server → device**; device→host links as
 
 ## Theming
 
-- Tailwind **foundry** palette is defined in `frontend/tailwind.config.js` with CSS variables in `frontend/src/index.css`.
-- The product targets a **light, white-first** shell: pale borders, white cards on the canvas, and a **dot** background via React Flow `Background` (dots variant).
+- **Chrome (shell)** — Top bar, event feed column, timeline strip, detail drawer, and floating **View / Edit** toolbar use a **Vercel-inspired** light treatment: **Inter** (loaded from Google Fonts in `index.html`), Tailwind **`geist`** tokens in `frontend/tailwind.config.js` (near-black text `#0a0a0a`, soft grays `#fafafa` / `#f5f5f5`, hairline borders `#ededed`, blue accents where needed), and CSS variables in `frontend/src/index.css` aligned to the same palette. Segmented controls use white-on-muted backgrounds; semantic chips in the event feed use soft tinted backgrounds (e.g. `bg-blue-50 text-blue-600`).
+- **Canvas (graph)** — Server / host / device **node components** still use the legacy **`foundry`** color names in Tailwind so graph card borders and status colors stay stable and independent of shell restyles. The React Flow **dot** background, edges, minimap, and controls are unchanged in behavior; global CSS only tweaks control/minimap chrome (borders, light shadows) to match the shell.
 
 ## Key files
 
