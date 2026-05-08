@@ -26,8 +26,9 @@ export default function App() {
   useEffect(() => {
     if (lastEvent && appMode === 'live') {
       refreshState();
+      loadEvents();
     }
-  }, [lastEvent, appMode, refreshState]);
+  }, [lastEvent, appMode, refreshState, loadEvents]);
 
   const handleSetMode = useCallback((m: AppMode) => {
     setAppMode(m);
