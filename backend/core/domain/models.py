@@ -36,9 +36,42 @@ class Edge:
     status: str | None = None
 
 
+@dataclass(frozen=True)
+class WeComClientState:
+    instance_id: str
+    name: str
+    version: str
+    brain_url: str
+    device_count: int
+    devices: tuple  # tuple of dicts for hashability
+    health_status: str
+    ai_reachable: bool
+    ai_response_ms: float | None
+    last_heartbeat_ns: int
+    online: bool
+
+
+@dataclass(frozen=True)
+class BrainServerState:
+    instance_id: str
+    name: str
+    version: str
+    worker_count: int
+    total_handled: int
+    avg_inflight: float
+    health_status: str
+    memory_mb: float | None
+    cpu_pct: float | None
+    last_heartbeat_ns: int
+    online: bool
+
+
 @dataclass
 class GraphSnapshot:
     servers: list[ServerState]
     hosts: list[HostState]
     devices: list[DeviceState]
     edges: list[Edge]
+    brain_servers: list[BrainServerState]
+    wecom_clients: list[WeComClientState]
+    heartbeat_edges: list[Edge]

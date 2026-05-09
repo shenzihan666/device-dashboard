@@ -6,18 +6,21 @@ from dataclasses import dataclass
 
 DEFAULTS: dict[str, str] = {
     "grafana_enabled": "false",
-    "langsmith_enabled": "true",
+    "point_to_point_enabled": "true",
+    "langsmith_enabled": "false",
 }
 
 
 @dataclass
 class AppSettingsState:
     grafana_enabled: bool
+    point_to_point_enabled: bool
     langsmith_enabled: bool
 
     def to_dict(self) -> dict[str, bool]:
         return {
             "grafana_enabled": self.grafana_enabled,
+            "point_to_point_enabled": self.point_to_point_enabled,
             "langsmith_enabled": self.langsmith_enabled,
         }
 
@@ -36,5 +39,6 @@ async def load_effective(repo: object) -> AppSettingsState:
     merged = {**DEFAULTS, **stored}
     return AppSettingsState(
         grafana_enabled=_parse_bool(merged["grafana_enabled"]),
+        point_to_point_enabled=_parse_bool(merged["point_to_point_enabled"]),
         langsmith_enabled=_parse_bool(merged["langsmith_enabled"]),
     )

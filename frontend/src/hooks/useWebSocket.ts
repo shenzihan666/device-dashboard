@@ -32,6 +32,9 @@ export function useWebSocket(active: boolean) {
         if (msg.type === 'event' && msg.payload) {
           setLastEvent(msg.payload);
         }
+        if (msg.type === 'heartbeat_update') {
+          setLastEvent({ kind: 'heartbeat_update', ...msg } as ConnectionEvent);
+        }
       } catch { /* ignore parse errors */ }
     };
 

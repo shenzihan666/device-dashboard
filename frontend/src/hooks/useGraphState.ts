@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { getState, getEvents, type StateSnapshot, type ConnectionEvent } from '../services/api';
 
 export function useGraphState(appMode: 'live' | 'replay') {
-  const [snapshot, setSnapshot] = useState<StateSnapshot>({ servers: [], hosts: [], devices: [], edges: [] });
+  const [snapshot, setSnapshot] = useState<StateSnapshot>({ servers: [], hosts: [], devices: [], edges: [], brain_servers: [], wecom_clients: [], heartbeat_edges: [] });
   const [events, setEvents] = useState<ConnectionEvent[]>([]);
 
   const refreshState = useCallback(async () => {

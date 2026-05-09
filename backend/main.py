@@ -15,6 +15,7 @@ from backend.api.middleware import register_middleware
 from backend.api.routes import all_routers
 from backend.config import get_settings
 from backend.core.services.app_settings import AppSettingsState, load_effective
+from backend.core.services.heartbeat_registry import HeartbeatRegistry
 from backend.core.services.poller_service import PollerService
 from backend.core.services.state_projector import StateProjector
 from backend.infrastructure.database.models import Base
@@ -37,6 +38,43 @@ logger = structlog.get_logger(__name__)
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 _NANO = 1_000_000_000
+
+
+class HeartbeatManager:
+    """Manages the lifecycle of the heartbeat registry based on app settings."""
+
+    def __init__(
+        self,
+        registry: HeartbeatRegistry,
+        broadcaster: Broadcaster,
+        check_interval_s: int,
+    ) -> None:
+        self._registry = registry
+        self._broadcaster = broadcaster
+        self._check_interval_s = check_interval_s
+        self._running = False
+
+    @property
+    def registry(self) -> HeartbeatRegistry:
+        return self._registry
+
+    async def apply(self, app_settings: AppSettingsState) -> None:
+        """Start or stop the heartbeat registry to match *app_settings*."""
+        if app_settings.point_to_point_enabled and not self._running:
+            await self._registry.start_offline_checker(self._check_interval_s)
+            self._running = True
+            logger.info("heartbeat_manager_started")
+        elif not app_settings.point_to_point_enabled and self._running:
+            await self._registry.stop()
+            self._registry.clear()
+            self._running = False
+            await self._broadcaster.broadcast({"type": "heartbeat_update"})
+            logger.info("heartbeat_manager_stopped")
+
+    async def shutdown(self) -> None:
+        if self._running:
+            await self._registry.stop()
+            self._running = False
 
 
 class PollerManager:
@@ -64,6 +102,8 @@ class PollerManager:
             await self._start()
         elif not should_run and self._poller is not None:
             await self._stop()
+            self._state.clear()
+            await self._broadcaster.broadcast({"type": "heartbeat_update"})
 
     async def _start(self) -> None:
         settings = self._settings  # type: ignore[attr-defined]
@@ -118,6 +158,19 @@ async def lifespan(app: FastAPI):
     app.state.projector = state
     app.state.broadcaster = broadcaster
 
+    registry = HeartbeatRegistry(
+        offline_grace_ns=settings.heartbeat_grace_s * _NANO,
+        broadcaster=broadcaster,
+    )
+    app.state.heartbeat_registry = registry
+
+    heartbeat_manager = HeartbeatManager(
+        registry=registry,
+        broadcaster=broadcaster,
+        check_interval_s=settings.heartbeat_check_interval_s,
+    )
+    app.state.heartbeat_manager = heartbeat_manager
+
     poller_manager = PollerManager(settings=settings, state=state, broadcaster=broadcaster)
     app.state.poller_manager = poller_manager
 
@@ -127,12 +180,15 @@ async def lifespan(app: FastAPI):
         app_settings = await load_effective(settings_repo)
 
     await poller_manager.apply(app_settings)
+    await heartbeat_manager.apply(app_settings)
 
     # Backward-compat: expose .poller for status route
     app.state.poller = poller_manager.poller
+    app.state.heartbeat_registry = registry
 
     yield
 
+    await heartbeat_manager.shutdown()
     await poller_manager.shutdown()
 
 

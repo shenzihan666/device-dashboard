@@ -100,6 +100,7 @@ export default function App() {
         <div className="relative overflow-hidden" style={{ gridArea: 'graph' }}>
           <ConnectionCanvas
             snapshot={snapshot}
+            dataSources={snapshot.data_sources ?? { grafana_enabled: appSettings.grafana_enabled, point_to_point_enabled: appSettings.point_to_point_enabled }}
             positions={positions}
             canvasMode={canvasMode}
             onNodeDragStop={savePosition}

@@ -104,6 +104,12 @@ export default function SettingsDrawer({
             </h3>
             <div className="divide-y divide-geist-border">
               <ToggleRow
+                label="Point-to-point"
+                description="Heartbeat from brain server & WeCom client"
+                checked={settings.point_to_point_enabled}
+                onChange={(v) => onUpdate({ point_to_point_enabled: v })}
+              />
+              <ToggleRow
                 label="Grafana"
                 description="Loki polling for sidecar logs"
                 checked={settings.grafana_enabled}

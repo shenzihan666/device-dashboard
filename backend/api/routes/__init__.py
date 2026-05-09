@@ -2,6 +2,7 @@
 
 from backend.api.routes.entities import router as entities_router
 from backend.api.routes.events import router as events_router
+from backend.api.routes.heartbeat_ws import router as heartbeat_ws_router
 from backend.api.routes.langsmith import router as langsmith_router
 from backend.api.routes.layout import router as layout_router
 from backend.api.routes.settings import router as settings_router
@@ -18,4 +19,5 @@ all_routers = [
     settings_router,
     status_router,
     websocket_router,
+    heartbeat_ws_router,
 ]

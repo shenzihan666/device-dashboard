@@ -14,11 +14,48 @@ export interface ConnectionEvent {
   payload_json?: Record<string, unknown> | null;
 }
 
+export interface WeComClientState {
+  instance_id: string;
+  name: string;
+  version: string;
+  brain_url: string;
+  device_count: number;
+  devices: { serial: string; name: string; status: string }[];
+  health_status: string;
+  ai_reachable: boolean;
+  ai_response_ms: number | null;
+  last_heartbeat_ns: number;
+  online: boolean;
+}
+
+export interface BrainServerState {
+  instance_id: string;
+  name: string;
+  version: string;
+  worker_count: number;
+  total_handled: number;
+  avg_inflight: number;
+  health_status: string;
+  memory_mb: number | null;
+  cpu_pct: number | null;
+  last_heartbeat_ns: number;
+  online: boolean;
+}
+
+export interface DataSourcesState {
+  grafana_enabled: boolean;
+  point_to_point_enabled: boolean;
+}
+
 export interface StateSnapshot {
   servers: { url: string; device_count: number }[];
   hosts: { name: string; status: string; last_seen_ns?: number; device_count: number }[];
   devices: { serial: string; host?: string; ai_url: string; status: string; processing?: boolean; last_seen_ns?: number }[];
   edges: { from: string; to: string; type: string; status?: string }[];
+  brain_servers: BrainServerState[];
+  wecom_clients: WeComClientState[];
+  heartbeat_edges: { from: string; to: string; type: string; status?: string }[];
+  data_sources?: DataSourcesState;
 }
 
 export interface NodePosition {
@@ -103,6 +140,7 @@ export async function resetLayout(): Promise<void> {
 
 export interface AppSettingsState {
   grafana_enabled: boolean;
+  point_to_point_enabled: boolean;
   langsmith_enabled: boolean;
 }
 

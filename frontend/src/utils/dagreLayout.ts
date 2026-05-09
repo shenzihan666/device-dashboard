@@ -5,6 +5,17 @@ const NODE_SIZES: Record<string, { width: number; height: number }> = {
   server: { width: 220, height: 100 },
   host: { width: 200, height: 90 },
   device: { width: 180, height: 80 },
+  brain_server: { width: 220, height: 120 },
+  wecom_client: { width: 230, height: 140 },
+};
+
+/** Rank priority per node type — lower = higher on the canvas. */
+const NODE_RANK: Record<string, number> = {
+  brain_server: 0,
+  server: 0,
+  wecom_client: 1,
+  host: 1,
+  device: 2,
 };
 
 /**
@@ -43,8 +54,38 @@ export function applyDagreLayout(
   });
 
   edges.forEach((edge) => {
-    g.setEdge(edge.source, edge.target);
+    // Reverse heartbeat edges for layout: wecom_client→brain_server becomes
+    // brain_server→wecom_client so that brain_server ranks higher.
+    const isHeartbeat = edge.id.startsWith('hb-edge');
+    const src = isHeartbeat ? edge.target : edge.source;
+    const tgt = isHeartbeat ? edge.source : edge.target;
+    g.setEdge(src, tgt);
   });
+
+  // Add invisible rank-enforcement edges between node types to guarantee
+  // the layer order: brain_server (top) → wecom_client (middle) → device (bottom).
+  const byType = new Map<string, Node[]>();
+  for (const n of nodes) {
+    const t = n.type || 'device';
+    if (!byType.has(t)) byType.set(t, []);
+    byType.get(t)!.push(n);
+  }
+
+  const rankGroups: string[][] = [
+    ['brain_server', 'server'],
+    ['wecom_client', 'host'],
+    ['device'],
+  ];
+
+  for (let i = 0; i < rankGroups.length - 1; i++) {
+    const upper = rankGroups[i].flatMap((t) => byType.get(t) || []);
+    const lower = rankGroups[i + 1].flatMap((t) => byType.get(t) || []);
+    if (upper.length > 0 && lower.length > 0) {
+      // Connect first upper node to first lower node with an invisible edge
+      // to enforce rank ordering.
+      g.setEdge(upper[0].id, lower[0].id, { style: 'invis' });
+    }
+  }
 
   dagre.layout(g);
 

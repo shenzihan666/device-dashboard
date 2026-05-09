@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     backfill_hours: int = 24
     offline_grace_s: int = 90
 
+    # Heartbeat monitoring
+    heartbeat_grace_s: int = 30
+    heartbeat_check_interval_s: int = 5
+
     # Database
     db_url: str = f"sqlite+aiosqlite:///{BASE_DIR / 'data' / 'events.db'}"
 

@@ -52,6 +52,17 @@ class StateProjector:
 
         self.device_processing: dict[str, bool] = {}
 
+    def clear(self) -> None:
+        """Reset all Grafana-sourced in-memory state."""
+        self.current_url.clear()
+        self.device_last_seen.clear()
+        self.device_offline.clear()
+        self.host_last_seen.clear()
+        self.host_offline.clear()
+        self.host_devices.clear()
+        self.device_host.clear()
+        self.device_processing.clear()
+
     def process(self, event: Event) -> list[Event]:
         """Process one event; return synthetic events (may be empty)."""
         synths: list[Event] = []
@@ -195,6 +206,9 @@ class StateProjector:
             "hosts": list(hosts.values()),
             "devices": list(devices.values()),
             "edges": edges,
+            "brain_servers": [],
+            "wecom_clients": [],
+            "heartbeat_edges": [],
         }
 
     def rebuild_from_events(self, events: list[dict]) -> None:

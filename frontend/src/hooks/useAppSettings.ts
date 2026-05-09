@@ -7,7 +7,8 @@ import {
 
 const DEFAULTS: AppSettingsState = {
   grafana_enabled: false,
-  langsmith_enabled: true,
+  point_to_point_enabled: true,
+  langsmith_enabled: false,
 };
 
 export function useAppSettings() {
