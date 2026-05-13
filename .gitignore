@@ -1,6 +1,7 @@
 data/
 .venv/
 .env
+uploads/
 
 # Local IDE / agent settings (do not commit)
 .claude/settings.local.json
@@ -15,3 +16,6 @@ __pycache__/
 # Frontend (Vite)
 frontend/node_modules/
 frontend/dist/
+
+# Reference projects (do not commit)
+references/

@@ -11,6 +11,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Settings UI: gear control next to LIVE/REPLAY opens a left **Settings** drawer with **Data Source** toggles (Grafana Loki polling vs LangSmith trace lookup).
 - `GET` / `PUT /api/settings` — persisted key/value store (`app_settings` table; Alembic revision `002`); defaults: Grafana off, LangSmith on.
 - `PollerManager` in `backend/main.py` starts or stops the Grafana `PollerService` when `grafana_enabled` and `API_TOKEN` allow it, without restarting the app.
+- File upload endpoints: `POST /api/upload` (manual) and `POST /api/android-logs/upload` (Android-compatible) with industrial-grade structured logging, no authentication required.
+- File storage service: structured directory layout (`uploads/{source}/{identity}/{kind}/{date}/{time}-{file}`), SHA256 checksums, size/extension validation.
+- WeCom client event processing: `/ws/heartbeat` accepts `event` type messages (not just `heartbeat`), persists to DB and broadcasts via WebSocket.
+- WeCom device nodes: canvas nodes for individual WeCom devices (serial number last 6 chars as label), with running/idle status.
+- WeCom event display: EventFeed renders `wecom_device_launched`, `wecom_device_stopped`, `wecom_ai_request`, `wecom_red_dot_update`, `wecom_followup_started`, `wecom_followup_progress`, `wecom_followup_result`, `wecom_followup_finished`.
 
 ### Fixed
 

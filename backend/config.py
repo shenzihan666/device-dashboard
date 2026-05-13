@@ -48,6 +48,11 @@ class Settings(BaseSettings):
     # CORS
     cors_origins: list[str] = ["*"]
 
+    # File Upload
+    upload_dir: Path = BASE_DIR / "uploads"
+    upload_allowed_extensions: list[str] = [".db", ".jsonl", ".log", ".xlsx", ".xls"]
+    upload_max_size_mb: int = 100  # 100 MB max file size
+
 
 @lru_cache
 def get_settings() -> Settings:

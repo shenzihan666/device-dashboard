@@ -19,6 +19,7 @@ dependencies = [
     "alembic>=1.13",
     "pydantic-settings>=2.0",
     "structlog>=24.0",
+    "python-multipart>=0.0.18",
 ]
 
 [tool.setuptools.packages.find]
