@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 import structlog
 from fastapi import WebSocket
 
+from backend.core.domain.events import Event
 from backend.infrastructure.websocket.broadcaster import Broadcaster
 
 logger = structlog.get_logger(__name__)
@@ -82,9 +83,11 @@ class HeartbeatRegistry:
         self,
         offline_grace_ns: int,
         broadcaster: Broadcaster,
+        session_factory: Any = None,
     ) -> None:
         self._offline_grace_ns = offline_grace_ns
         self._broadcaster = broadcaster
+        self._session_factory = session_factory
 
         self._instances: dict[str, dict] = {}
         self._instance_types: dict[str, str] = {}
@@ -170,6 +173,53 @@ class HeartbeatRegistry:
         await self._broadcaster.broadcast(
             {"type": "heartbeat_update", "instance_id": instance_id}
         )
+
+    async def on_event(self, instance_id: str, data: dict) -> None:
+        """Process an incoming discrete event from a WeCom client.
+
+        Persists into the SQLite event store and broadcasts to live browsers.
+        """
+        event_kind = data.get("event_kind", "unknown")
+        serial = data.get("serial", "")
+        payload = data.get("payload", {})
+        ts = data.get("ts", "")
+
+        now_ns = int(time.time() * _NANO)
+
+        # Persist to DB if session factory is available
+        if self._session_factory:
+            try:
+                from backend.infrastructure.database.repositories.event_repo import (
+                    SQLAlchemyEventRepository,
+                )
+
+                async with self._session_factory() as session:
+                    repo = SQLAlchemyEventRepository(session)
+                    event = Event(
+                        ts_ns=now_ns,
+                        kind=f"wecom_{event_kind}",
+                        host=instance_id,
+                        device_serial=serial or None,
+                        payload=payload,
+                    )
+                    await repo.insert(event)
+            except Exception as exc:
+                logger.warning(
+                    "heartbeat_event_persist_error",
+                    instance_id=instance_id,
+                    event_kind=event_kind,
+                    error=str(exc),
+                )
+
+        # Broadcast to live browsers
+        await self._broadcaster.broadcast({
+            "type": "event",
+            "instance_id": instance_id,
+            "event_kind": event_kind,
+            "serial": serial,
+            "payload": payload,
+            "ts": ts,
+        })
 
     async def on_disconnect(self, instance_id: str, ws: WebSocket | None = None) -> None:
         """Handle client disconnection.

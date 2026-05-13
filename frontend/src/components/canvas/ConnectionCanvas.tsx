@@ -19,6 +19,7 @@ import HostNode from './HostNode';
 import DeviceNode from './DeviceNode';
 import BrainServerNode from './BrainServerNode';
 import WeComClientNode from './WeComClientNode';
+import WeComDeviceNode from './WeComDeviceNode';
 import { applyDagreLayout } from '../../utils/dagreLayout';
 import type { DataSourcesState, StateSnapshot } from '../../services/api';
 
@@ -28,6 +29,7 @@ const nodeTypes: NodeTypes = {
   device: DeviceNode,
   brain_server: BrainServerNode,
   wecom_client: WeComClientNode,
+  wecom_device: WeComDeviceNode,
 };
 
 interface ConnectionCanvasProps {
@@ -114,6 +116,17 @@ export default function ConnectionCanvas({
         },
         position: { x: 0, y: 0 },
       })) : []),
+      ...(p2pOn ? (snapshot.wecom_clients || []).flatMap((wc) =>
+        (wc.devices || []).map((dev) => ({
+          id: `wecom_device::${wc.instance_id}/${dev.serial}`,
+          type: 'wecom_device' as const,
+          data: {
+            label: dev.serial.slice(-6),
+            device: dev,
+          },
+          position: { x: 0, y: 0 },
+        }))
+      ) : []),
     ];
 
     const rawEdges: Edge[] = grafanaOn ? snapshot.edges.map((e, i) => {
@@ -174,7 +187,29 @@ export default function ConnectionCanvas({
       };
     }) : [];
 
-    const allEdges = [...rawEdges, ...hbEdges];
+    // Edges: wecom_client -> wecom_device (per-device links)
+    const wcDeviceEdges: Edge[] = p2pOn ? (snapshot.wecom_clients || []).flatMap((wc) =>
+      (wc.devices || []).map((dev, di) => ({
+        id: `wc-dev-${wc.instance_id}-${dev.serial}-${di}`,
+        source: buildNodeId('wecom_client', wc.instance_id),
+        target: `wecom_device::${wc.instance_id}/${dev.serial}`,
+        type: 'default',
+        style: {
+          stroke: dev.running ? '#3b82f6' : '#9ca3af',
+          strokeWidth: 1.5,
+          strokeDasharray: '5,5',
+        },
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          color: dev.running ? '#3b82f6' : '#9ca3af',
+          width: 14,
+          height: 14,
+        },
+        animated: dev.running === true,
+      }))
+    ) : [];
+
+    const allEdges = [...rawEdges, ...hbEdges, ...wcDeviceEdges];
 
     setNodes(applyDagreLayout(rawNodes, allEdges, positions));
     setEdges(allEdges);
@@ -210,6 +245,7 @@ export default function ConnectionCanvas({
           if (node.type === 'host') return '#10B981';
           if (node.type === 'brain_server') return '#f97316';
           if (node.type === 'wecom_client') return '#3b82f6';
+          if (node.type === 'wecom_device') return '#8b5cf6';
           return '#7c3aed';
         }}
         nodeBorderRadius={6}

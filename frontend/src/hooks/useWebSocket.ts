@@ -29,8 +29,9 @@ export function useWebSocket(active: boolean) {
     ws.onmessage = (e) => {
       try {
         const msg = JSON.parse(e.data);
-        if (msg.type === 'event' && msg.payload) {
-          setLastEvent(msg.payload);
+        if (msg.type === 'event') {
+          const ev = msg.payload ?? msg;
+          setLastEvent({ kind: ev.event_kind ?? 'event', ts_ns: Date.now() * 1e6, ...ev } as ConnectionEvent);
         }
         if (msg.type === 'heartbeat_update') {
           setLastEvent({ kind: 'heartbeat_update', ...msg } as ConnectionEvent);

@@ -161,6 +161,7 @@ async def lifespan(app: FastAPI):
     registry = HeartbeatRegistry(
         offline_grace_ns=settings.heartbeat_grace_s * _NANO,
         broadcaster=broadcaster,
+        session_factory=get_session_factory(),
     )
     app.state.heartbeat_registry = registry
 

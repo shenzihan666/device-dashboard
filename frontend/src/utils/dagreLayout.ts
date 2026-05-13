@@ -9,15 +9,6 @@ const NODE_SIZES: Record<string, { width: number; height: number }> = {
   wecom_client: { width: 230, height: 140 },
 };
 
-/** Rank priority per node type — lower = higher on the canvas. */
-const NODE_RANK: Record<string, number> = {
-  brain_server: 0,
-  server: 0,
-  wecom_client: 1,
-  host: 1,
-  device: 2,
-};
-
 /**
  * Run dagre auto-layout on nodes that don't have saved positions.
  * Nodes with existing positions are kept in place but still participate in graph structure.
@@ -54,11 +45,11 @@ export function applyDagreLayout(
   });
 
   edges.forEach((edge) => {
-    // Reverse heartbeat edges for layout: wecom_client→brain_server becomes
-    // brain_server→wecom_client so that brain_server ranks higher.
     const isHeartbeat = edge.id.startsWith('hb-edge');
-    const src = isHeartbeat ? edge.target : edge.source;
-    const tgt = isHeartbeat ? edge.source : edge.target;
+    const isDeviceHost = edge.id.startsWith('edge-') && edge.source.startsWith('device::') && edge.target.startsWith('host::');
+    const reverse = isHeartbeat || isDeviceHost;
+    const src = reverse ? edge.target : edge.source;
+    const tgt = reverse ? edge.source : edge.target;
     g.setEdge(src, tgt);
   });
 
@@ -72,8 +63,8 @@ export function applyDagreLayout(
   }
 
   const rankGroups: string[][] = [
-    ['brain_server', 'server'],
-    ['wecom_client', 'host'],
+    ['brain_server'],
+    ['wecom_client'],
     ['device'],
   ];
 

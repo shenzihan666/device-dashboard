@@ -43,3 +43,13 @@ SYNTH_DEVICE_OFFLINE = "synth_device_offline"
 SYNTH_DEVICE_ONLINE = "synth_device_online"
 SYNTH_HOST_OFFLINE = "synth_host_offline"
 SYNTH_HOST_ONLINE = "synth_host_online"
+
+# WeCom client telemetry (via /ws/heartbeat events)
+WECOM_DEVICE_LAUNCHED = "wecom_device_launched"
+WECOM_DEVICE_STOPPED = "wecom_device_stopped"
+WECOM_AI_REQUEST = "wecom_ai_request"
+WECOM_RED_DOT_UPDATE = "wecom_red_dot_update"
+WECOM_FOLLOWUP_STARTED = "wecom_followup_started"
+WECOM_FOLLOWUP_PROGRESS = "wecom_followup_progress"
+WECOM_FOLLOWUP_RESULT = "wecom_followup_result"
+WECOM_FOLLOWUP_FINISHED = "wecom_followup_finished"

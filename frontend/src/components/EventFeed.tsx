@@ -14,6 +14,14 @@ const KIND_CONFIG: Record<string, { cls: string; label: string }> = {
   metric_event: { cls: 'bg-amber-50 text-amber-700', label: 'METRIC' },
   device_processing: { cls: 'bg-red-50 text-red-600', label: 'PROCESSING' },
   device_idle: { cls: 'bg-emerald-50 text-emerald-600', label: 'IDLE' },
+  wecom_device_launched: { cls: 'bg-emerald-50 text-emerald-600', label: 'LAUNCHED' },
+  wecom_device_stopped: { cls: 'bg-gray-100 text-gray-600', label: 'STOPPED' },
+  wecom_ai_request: { cls: 'bg-blue-50 text-blue-600', label: 'AI CALL' },
+  wecom_red_dot_update: { cls: 'bg-red-50 text-red-600', label: 'RED DOT' },
+  wecom_followup_started: { cls: 'bg-amber-50 text-amber-700', label: '补刀 START' },
+  wecom_followup_progress: { cls: 'bg-amber-50 text-amber-600', label: '补刀 WIP' },
+  wecom_followup_result: { cls: 'bg-violet-50 text-violet-600', label: '补刀 RESULT' },
+  wecom_followup_finished: { cls: 'bg-emerald-50 text-emerald-700', label: '补刀 DONE' },
 };
 
 const HIDDEN_KINDS = new Set(['host_device_map']);
@@ -75,6 +83,31 @@ export default function EventFeed({ events, onEventClick }: EventFeedProps) {
               )}
               {ev.kind === 'device_processing' && ev.payload_json?.priority_count != null && (
                 <span className="text-red-600 ml-1">{String(ev.payload_json.priority_count)} users</span>
+              )}
+              {ev.kind === 'wecom_red_dot_update' && ev.payload_json && (
+                <span className="text-red-600 ml-1">
+                  {String(ev.payload_json.pending ?? 0)} pending
+                  {ev.payload_json.current_target ? ` → ${String(ev.payload_json.current_target)}` : ''}
+                </span>
+              )}
+              {ev.kind === 'wecom_ai_request' && ev.payload_json && (
+                <span className={`ml-1 ${ev.payload_json.result === 'ok' ? 'text-emerald-600' : 'text-red-600'}`}>
+                  {String(ev.payload_json.result ?? '')}
+                  {ev.payload_json.latency_ms != null ? ` ${String(ev.payload_json.latency_ms)}ms` : ''}
+                </span>
+              )}
+              {ev.kind === 'wecom_followup_started' && ev.payload_json && (
+                <span className="text-amber-700 ml-1">{String(ev.payload_json.total_targets ?? 0)} targets</span>
+              )}
+              {ev.kind === 'wecom_followup_result' && ev.payload_json && (
+                <span className={`ml-1 ${ev.payload_json.success ? 'text-emerald-600' : 'text-red-600'}`}>
+                  {String(ev.payload_json.target ?? '')} {ev.payload_json.success ? '✓' : '✗'}
+                </span>
+              )}
+              {ev.kind === 'wecom_followup_finished' && ev.payload_json && (
+                <span className="text-emerald-700 ml-1">
+                  {String(ev.payload_json.success_count ?? 0)}ok {String(ev.payload_json.fail_count ?? 0)}fail {String(ev.payload_json.skipped_count ?? 0)}skip
+                </span>
               )}
             </div>
           );

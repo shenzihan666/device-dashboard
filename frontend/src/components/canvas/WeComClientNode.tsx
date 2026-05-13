@@ -23,7 +23,7 @@ export default function WeComClientNode({ data, selected }: WeComClientNodeProps
       ${isOffline ? 'bg-gray-100 border-gray-300 opacity-60' : 'bg-blue-50 border-blue-400'}
       ${selected ? 'shadow-lg ring-2 ring-blue-400/50' : ''}
     `}>
-      <Handle type="source" position={Position.Bottom} className="!w-3 !h-3 !bg-blue-400 !border-blue-400" />
+      <Handle type="source" position={Position.Top} className="!w-3 !h-3 !bg-blue-400 !border-blue-400" />
 
       <div className="flex items-center gap-2 mb-2">
         <div className="text-blue-600">
@@ -69,24 +69,29 @@ export default function WeComClientNode({ data, selected }: WeComClientNodeProps
       </div>
 
       {state.devices.length > 0 && (
-        <div className="mt-1.5 flex flex-wrap gap-1">
-          {state.devices.slice(0, 3).map((d) => (
-            <span
-              key={d.serial}
-              className={`text-[9px] font-mono px-1 py-0.5 rounded ${
-                d.status === 'online'
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'bg-gray-100 text-gray-500'
-              }`}
-            >
-              {d.serial.slice(-6)}
-            </span>
-          ))}
-          {state.devices.length > 3 && (
-            <span className="text-[9px] text-gray-400">+{state.devices.length - 3}</span>
-          )}
+        <div className="mt-1.5 flex flex-wrap gap-1 text-[9px]">
+          {(() => {
+            const runCount = state.devices.filter((d) => d.running).length;
+            const idleCount = state.devices.length - runCount;
+            return (
+              <>
+                {runCount > 0 && (
+                  <span className="px-1 py-0.5 bg-emerald-100 text-emerald-700 rounded font-medium">
+                    {runCount} running
+                  </span>
+                )}
+                {idleCount > 0 && (
+                  <span className="px-1 py-0.5 bg-gray-100 text-gray-500 rounded">
+                    {idleCount} idle
+                  </span>
+                )}
+              </>
+            );
+          })()}
         </div>
       )}
+
+      <Handle type="source" position={Position.Bottom} className="!w-3 !h-3 !bg-blue-400 !border-blue-400" />
     </div>
   );
 }

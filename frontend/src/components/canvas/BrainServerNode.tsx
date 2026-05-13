@@ -29,8 +29,7 @@ export default function BrainServerNode({ data, selected }: BrainServerNodeProps
       ${isOffline ? 'bg-gray-100 border-gray-300 opacity-60' : 'bg-orange-50 border-orange-400'}
       ${selected ? 'shadow-lg ring-2 ring-orange-400/50' : ''}
     `}>
-      <Handle type="target" position={Position.Top} className="!w-3 !h-3 !bg-orange-400 !border-orange-400" />
-      <Handle type="source" position={Position.Bottom} className="!w-3 !h-3 !bg-orange-400 !border-orange-400" />
+      <Handle type="target" position={Position.Bottom} className="!w-3 !h-3 !bg-orange-400 !border-orange-400" />
 
       <div className="flex items-center gap-2 mb-2">
         <div className="text-orange-600">

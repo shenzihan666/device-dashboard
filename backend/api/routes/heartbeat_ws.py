@@ -27,16 +27,19 @@ async def websocket_heartbeat(ws: WebSocket) -> None:
         instance_type = data.get("instance_type")
 
         if not instance_id or instance_type not in ("wecom_client", "brain_server"):
-            await ws.send_text(
-                json.dumps({"type": "error", "message": "invalid first heartbeat"})
-            )
+            await ws.send_text(json.dumps({"type": "error", "message": "invalid first heartbeat"}))
             await ws.close()
             return
 
         accepted = await registry.on_connect(instance_id, instance_type, ws)
         if not accepted:
             await ws.send_text(
-                json.dumps({"type": "error", "message": "duplicate instance_id; existing connection is active"})
+                json.dumps(
+                    {
+                        "type": "error",
+                        "message": "duplicate instance_id; existing connection is active",
+                    }
+                )
             )
             await ws.close()
             return
@@ -47,26 +50,27 @@ async def websocket_heartbeat(ws: WebSocket) -> None:
         await registry.on_heartbeat(instance_id, data)
         await ws.send_text(json.dumps({"type": "ack"}))
 
-        # Continue receiving heartbeats
+        # Continue receiving heartbeats and events
         while True:
             raw = await ws.receive_text()
             try:
                 data = json.loads(raw)
             except json.JSONDecodeError:
                 logger.warning("heartbeat_invalid_json", instance_id=instance_id)
-                await ws.send_text(
-                    json.dumps({"type": "error", "message": "invalid json"})
-                )
+                await ws.send_text(json.dumps({"type": "error", "message": "invalid json"}))
                 continue
-            await registry.on_heartbeat(instance_id, data)
+            msg_type = data.get("type", "heartbeat")
+            if msg_type == "event":
+                await registry.on_event(instance_id, data)
+            elif msg_type == "heartbeat":
+                await registry.on_heartbeat(instance_id, data)
+            # Silently ignore unknown types for forward compatibility
             await ws.send_text(json.dumps({"type": "ack"}))
 
     except WebSocketDisconnect:
         pass
     except Exception as exc:
-        logger.warning(
-            "heartbeat_ws_error", instance_id=instance_id, error=str(exc)
-        )
+        logger.warning("heartbeat_ws_error", instance_id=instance_id, error=str(exc))
     finally:
         if instance_id and accepted:
             await registry.on_disconnect(instance_id, ws)

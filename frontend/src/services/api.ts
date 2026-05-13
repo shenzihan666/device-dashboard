@@ -14,13 +14,38 @@ export interface ConnectionEvent {
   payload_json?: Record<string, unknown> | null;
 }
 
+export interface WeComDeviceFollowup {
+  in_progress: boolean;
+  target: string | null;
+  batch_id: string | null;
+}
+
+export interface WeComDeviceAI {
+  last_request_at: string | null;
+  requests_total: number;
+  failures_total: number;
+}
+
+export interface WeComDevice {
+  serial: string;
+  name: string;
+  status: string;
+  running?: boolean;
+  sync_running?: boolean;
+  followup_running?: boolean;
+  red_dot_pending?: number;
+  current_target?: string | null;
+  followup?: WeComDeviceFollowup;
+  ai?: WeComDeviceAI;
+}
+
 export interface WeComClientState {
   instance_id: string;
   name: string;
   version: string;
   brain_url: string;
   device_count: number;
-  devices: { serial: string; name: string; status: string }[];
+  devices: WeComDevice[];
   health_status: string;
   ai_reachable: boolean;
   ai_response_ms: number | null;
