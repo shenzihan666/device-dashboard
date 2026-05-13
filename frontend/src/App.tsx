@@ -7,6 +7,8 @@ import EventFeed from './components/EventFeed';
 import Timeline from './components/Timeline';
 import DetailDrawer from './components/DetailDrawer';
 import SettingsDrawer from './components/SettingsDrawer';
+import Sidebar from './components/Sidebar';
+import Dashboard from './components/dashboard/Dashboard';
 import { useWebSocket } from './hooks/useWebSocket';
 import { useGraphState } from './hooks/useGraphState';
 import { useLayout } from './hooks/useLayout';
@@ -15,12 +17,14 @@ import type { ConnectionEvent } from './services/api';
 
 type AppMode = 'live' | 'replay';
 type CanvasMode = 'view' | 'edit';
+type Page = 'canvas' | 'dashboard';
 
 export default function App() {
   const [appMode, setAppMode] = useState<AppMode>('live');
   const [canvasMode, setCanvasMode] = useState<CanvasMode>('view');
   const [selectedEvent, setSelectedEvent] = useState<ConnectionEvent | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [page, setPage] = useState<Page>('canvas');
   const { settings: appSettings, update: updateAppSettings } = useAppSettings();
 
   const { wsStatus, lastEvent } = useWebSocket(appMode === 'live');
@@ -50,8 +54,13 @@ export default function App() {
 
   return (
     <ReactFlowProvider>
-      <div className="w-full h-full grid grid-rows-[56px_1fr_80px] grid-cols-[1fr_340px]"
-        style={{ gridTemplateAreas: '"topbar topbar" "graph feed" "timeline timeline"' }}>
+      <div className="w-full h-full grid grid-rows-[56px_1fr_80px] grid-cols-[64px_1fr_340px]"
+        style={{ gridTemplateAreas: '"sidebar topbar topbar" "sidebar graph feed" "sidebar timeline timeline"' }}>
+        {/* Sidebar */}
+        <div style={{ gridArea: 'sidebar' }}>
+          <Sidebar currentPage={page} onPageChange={setPage} />
+        </div>
+
         {/* Top bar */}
         <header className="flex items-center gap-4 px-5 bg-white border-b border-geist-border z-10"
           style={{ gridArea: 'topbar' }}>
@@ -96,20 +105,26 @@ export default function App() {
           </div>
         </header>
 
-        {/* Graph canvas */}
+        {/* Main content area */}
         <div className="relative overflow-hidden" style={{ gridArea: 'graph' }}>
-          <ConnectionCanvas
-            snapshot={snapshot}
-            dataSources={snapshot.data_sources ?? { point_to_point_enabled: appSettings.point_to_point_enabled }}
-            positions={positions}
-            canvasMode={canvasMode}
-            onNodeDragStop={savePosition}
-          />
-          <CanvasToolbar
-            mode={canvasMode}
-            onModeChange={setCanvasMode}
-            onResetLayout={clearLayout}
-          />
+          {page === 'canvas' ? (
+            <>
+              <ConnectionCanvas
+                snapshot={snapshot}
+                dataSources={snapshot.data_sources ?? { point_to_point_enabled: appSettings.point_to_point_enabled }}
+                positions={positions}
+                canvasMode={canvasMode}
+                onNodeDragStop={savePosition}
+              />
+              <CanvasToolbar
+                mode={canvasMode}
+                onModeChange={setCanvasMode}
+                onResetLayout={clearLayout}
+              />
+            </>
+          ) : (
+            <Dashboard snapshot={snapshot} />
+          )}
         </div>
 
         {/* Event feed */}
