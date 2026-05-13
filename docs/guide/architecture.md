@@ -19,11 +19,10 @@ Zero framework dependencies. Contains:
 - **`domain/events.py`** — `Event` dataclass + kind constants (the central domain entity)
 - **`domain/models.py`** — Value objects (`DeviceState`, `HostState`, `ServerState`, `GraphSnapshot`)
 - **`ports/repositories.py`** — Protocol interfaces for database access (`EventRepository`, `EntityRepository`, `LayoutRepository`, `CursorRepository`)
-- **`ports/services.py`** — Protocol interfaces for external services (`GrafanaClientPort`, `LangSmithClientPort`, `BroadcasterPort`)
+- **`ports/services.py`** — Protocol interfaces for external services (`BroadcasterPort`)
 - **`services/state_projector.py`** — In-memory CQRS-style projection: processes events, detects switches, offline/online transitions
-- **`services/parser.py`** — Regex/JSON parsers for 5 log-line shapes
-- **`services/poller_service.py`** — Background polling orchestration (Loki → parse → persist → project → broadcast)
-- **`services/app_settings.py`** — Defaults and typed loader for persisted dashboard toggles (`grafana_enabled`, `langsmith_enabled`)
+- **`services/parser.py`** — Regex/JSON parsers for log-line shapes (for file upload processing)
+- **`services/app_settings.py`** — Defaults and typed loader for persisted dashboard toggles (`point_to_point_enabled`)
 
 ### Infrastructure Layer — `backend/infrastructure/`
 
@@ -32,15 +31,13 @@ Concrete implementations of domain ports:
 - **`database/models.py`** — SQLAlchemy 2.0 ORM table definitions
 - **`database/session.py`** — Async engine and session factory
 - **`database/repositories/`** — Repository implementations using SQLAlchemy async sessions (including `settings_repo` for `app_settings`)
-- **`external/grafana_client.py`** — Async httpx-based Grafana/Loki HTTP client
-- **`external/langsmith_client.py`** — LangSmith trace lookup adapter
 - **`websocket/broadcaster.py`** — WebSocket pub-sub fan-out
 
 ### Presentation (API) Layer — `backend/api/`
 
 HTTP/WebSocket interface:
 
-- **`routes/`** — FastAPI routers split by resource (events, state, entities, layout, settings, status, langsmith, websocket)
+- **`routes/`** — FastAPI routers split by resource (events, state, entities, layout, settings, status, upload, websocket, heartbeat_ws)
 - **`schemas/`** — Pydantic models for request validation and response serialization
 - **`dependencies.py`** — `Depends()` providers wiring repositories and services
 - **`middleware.py`** — Request ID correlation, response timing, CORS
@@ -49,19 +46,18 @@ HTTP/WebSocket interface:
 ## Data Flow
 
 ```
-Grafana Loki → GrafanaClient (httpx async)
-    → PollerService._fetch_and_process()
-        → parser.parse_row() → Event dataclass
-        → EventRepository.insert() → SQLite (via SQLAlchemy)
-        → EntityRepository.upsert()
-        → StateProjector.process() → synthetic events
-        → Broadcaster.broadcast() → WebSocket clients
+WebSocket /ws/heartbeat → heartbeat_registry → broadcast
+File upload → parser.parse_row() → Event dataclass
+    → EventRepository.insert() → SQLite (via SQLAlchemy)
+    → EntityRepository.upsert()
+    → StateProjector.process() → synthetic events
+    → Broadcaster.broadcast() → WebSocket clients
 ```
 
 ## Key Design Decisions
 
 1. **Protocol-based DI** — Domain defines `Protocol` interfaces; infrastructure implements them. Easily mockable for testing.
-2. **Async-first** — `aiosqlite` + SQLAlchemy async + `httpx.AsyncClient`. No thread-pool workarounds.
+2. **Async-first** — `aiosqlite` + SQLAlchemy async. No thread-pool workarounds.
 3. **Repository per aggregate** — Separate repos for events, entities, layout, cursors. Each has a focused interface.
 4. **App factory pattern** — `create_app()` builds the FastAPI app; `lifespan` manages resource lifecycle.
 5. **Unified response envelope** — All endpoints return `APIResponse[T]` with `success`, `data`, `error`, `error_code`, `meta`.
@@ -81,12 +77,6 @@ All settings are managed via `backend/config.py` using `pydantic-settings`:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `GRAFANA_URL` | `https://mynameisi.grafana.net` | Grafana instance URL |
-| `API_TOKEN` | `""` | Service account token for Grafana |
-| `LOKI_DATASOURCE_UID` | `grafanacloud-logs` | Loki datasource UID |
-| `LANGSMITH_API_KEY` | `""` | LangSmith API key |
-| `POLL_INTERVAL_S` | `10` | Polling interval in seconds |
-| `BACKFILL_HOURS` | `24` | Hours of history to backfill |
 | `OFFLINE_GRACE_S` | `90` | Grace period before marking offline |
 | `DB_URL` | `sqlite+aiosqlite:///data/events.db` | Database connection URL |
 | `LOG_LEVEL` | `INFO` | Logging level |

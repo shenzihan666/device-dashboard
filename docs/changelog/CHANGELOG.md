@@ -8,9 +8,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
-- Settings UI: gear control next to LIVE/REPLAY opens a left **Settings** drawer with **Data Source** toggles (Grafana Loki polling vs LangSmith trace lookup).
-- `GET` / `PUT /api/settings` — persisted key/value store (`app_settings` table; Alembic revision `002`); defaults: Grafana off, LangSmith on.
-- `PollerManager` in `backend/main.py` starts or stops the Grafana `PollerService` when `grafana_enabled` and `API_TOKEN` allow it, without restarting the app.
 - File upload endpoints: `POST /api/upload` (manual) and `POST /api/android-logs/upload` (Android-compatible) with industrial-grade structured logging, no authentication required.
 - File storage service: structured directory layout (`uploads/{source}/{identity}/{kind}/{date}/{time}-{file}`), SHA256 checksums, size/extension validation.
 - WeCom client event processing: `/ws/heartbeat` accepts `event` type messages (not just `heartbeat`), persists to DB and broadcasts via WebSocket.
@@ -34,12 +31,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Changed
 
 - **Breaking:** REST responses are wrapped in `{ success, data, error, error_code, meta }`; `PUT /api/layout` expects `{ "positions": [...] }` instead of a bare JSON array.
-- Grafana client is async **httpx** (`backend/infrastructure/external/grafana_client.py`); pandas and sync `requests` usage removed from the backend path.
-- Frontend `src/services/api.ts` unwraps the envelope for all dashboard API calls; LangSmith opens `trace_url` after a client-side fetch.
+- Frontend `src/services/api.ts` unwraps the envelope for all dashboard API calls.
 - Deployment runbook (`docs/runbooks/deployment.md`): optional Alembic step and curl checks updated for the response envelope.
 
 ### Removed
 
+- **Breaking:** Removed Grafana Loki polling entirely. No more `grafana_client.py`, `poller_service.py`, `API_TOKEN`, `GRAFANA_URL`, `LOKI_DATASOURCE_UID`, `POLL_INTERVAL_S`, `BACKFILL_HOURS`.
+- **Breaking:** Removed LangSmith integration entirely. No more `langsmith_client.py`, `langsmith.py` route, `LANGSMITH_API_KEY`, or trace lookup UI.
+- Settings UI simplified to only `point_to_point_enabled` toggle (on by default).
 - Flat modules `backend/api.py`, `backend/store.py`, `backend/poller.py`, `backend/state.py`, `backend/parser.py`, `backend/events.py`, `backend/ws.py`, `backend/grafana_client.py`, `backend/langsmith_link.py` (logic moved into the layered packages above).
 
 ## [0.1.0] - 2025-01-15

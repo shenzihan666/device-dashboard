@@ -6,12 +6,6 @@ Environment variable names follow the usual uppercase convention; they map to th
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `API_TOKEN` | *(empty)* | Grafana service account token (`glsa_...`). The Loki poller also requires **`grafana_enabled: true`** in persisted app settings (`PUT /api/settings` or defaults). When either is missing/false, Grafana polling stays off. |
-| `GRAFANA_URL` | `https://mynameisi.grafana.net` | Grafana instance base URL |
-| `LOKI_DATASOURCE_UID` | `grafanacloud-logs` | Loki datasource UID |
-| `LANGSMITH_API_KEY` | *(optional)* | Enables LangSmith trace lookup from `/api/langsmith/trace` |
-| `POLL_INTERVAL_S` | `10` | Seconds between Loki polls |
-| `BACKFILL_HOURS` | `24` | Hours of history to load on first start |
 | `OFFLINE_GRACE_S` | `90` | Seconds without activity before a device is marked offline |
 | `DB_URL` | `sqlite+aiosqlite:///…/data/events.db` | Async SQLAlchemy database URL (project-relative `data/events.db` by default) |
 | `LOG_LEVEL` | `INFO` | Root log level |
@@ -22,7 +16,7 @@ Secrets and local overrides should stay in `.env` (gitignored). See the reposito
 
 ## Runtime toggles (database)
 
-**Data source** switches (`grafana_enabled`, `langsmith_enabled`) are stored in the **`app_settings`** table and read at startup. Defaults are Grafana **off** and LangSmith **on** until you change them via the UI or `PUT /api/settings`. They survive process restarts independently of `.env`.
+**Data source** switch (`point_to_point_enabled`) is stored in the **`app_settings`** table and read at startup. Default is **on** until you change it via the UI or `PUT /api/settings`. It survives process restarts independently of `.env`.
 
 ## Migrations
 

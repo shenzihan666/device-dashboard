@@ -6,12 +6,8 @@ from pydantic import BaseModel
 
 
 class AppSettingsResponse(BaseModel):
-    grafana_enabled: bool
     point_to_point_enabled: bool
-    langsmith_enabled: bool
 
 
 class AppSettingsUpdateRequest(BaseModel):
-    grafana_enabled: bool | None = None
     point_to_point_enabled: bool | None = None
-    langsmith_enabled: bool | None = None

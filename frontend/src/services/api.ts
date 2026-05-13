@@ -68,7 +68,6 @@ export interface BrainServerState {
 }
 
 export interface DataSourcesState {
-  grafana_enabled: boolean;
   point_to_point_enabled: boolean;
 }
 
@@ -161,12 +160,10 @@ export async function resetLayout(): Promise<void> {
   await readEnvelope<{ cleared: boolean }>(res);
 }
 
-/* ── App settings (data-source toggles) ── */
+/* ─── App settings (data-source toggles) ───────────────────────────────────── */
 
 export interface AppSettingsState {
-  grafana_enabled: boolean;
   point_to_point_enabled: boolean;
-  langsmith_enabled: boolean;
 }
 
 export async function getAppSettings(): Promise<AppSettingsState> {
@@ -183,19 +180,4 @@ export async function updateAppSettings(
     body: JSON.stringify(patch),
   });
   return readEnvelope<AppSettingsState>(res);
-}
-
-/** LangSmith trace summary returned inside the API envelope `data`. */
-export interface LangsmithTraceSummary {
-  run_id: string;
-  name?: string;
-  status?: string;
-  latency_s?: number | null;
-  error?: string | null;
-  trace_url?: string | null;
-}
-
-export async function fetchLangsmithTrace(requestId: string): Promise<LangsmithTraceSummary> {
-  const res = await fetch(`/api/langsmith/trace?request_id=${encodeURIComponent(requestId)}`);
-  return readEnvelope<LangsmithTraceSummary>(res);
 }

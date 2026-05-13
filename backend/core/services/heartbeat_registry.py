@@ -118,9 +118,7 @@ class HeartbeatRegistry:
         self._online.clear()
         self._websockets.clear()
 
-    async def on_connect(
-        self, instance_id: str, instance_type: str, ws: WebSocket
-    ) -> bool:
+    async def on_connect(self, instance_id: str, instance_type: str, ws: WebSocket) -> bool:
         """Register a new connection.  Returns True if accepted, False if rejected.
 
         If another WebSocket is already registered for the same instance_id,
@@ -170,9 +168,7 @@ class HeartbeatRegistry:
         if not was_online:
             logger.info("heartbeat_instance_online", instance_id=instance_id)
 
-        await self._broadcaster.broadcast(
-            {"type": "heartbeat_update", "instance_id": instance_id}
-        )
+        await self._broadcaster.broadcast({"type": "heartbeat_update", "instance_id": instance_id})
 
     async def on_event(self, instance_id: str, data: dict) -> None:
         """Process an incoming discrete event from a WeCom client.
@@ -212,14 +208,16 @@ class HeartbeatRegistry:
                 )
 
         # Broadcast to live browsers
-        await self._broadcaster.broadcast({
-            "type": "event",
-            "instance_id": instance_id,
-            "event_kind": event_kind,
-            "serial": serial,
-            "payload": payload,
-            "ts": ts,
-        })
+        await self._broadcaster.broadcast(
+            {
+                "type": "event",
+                "instance_id": instance_id,
+                "event_kind": event_kind,
+                "serial": serial,
+                "payload": payload,
+                "ts": ts,
+            }
+        )
 
     async def on_disconnect(self, instance_id: str, ws: WebSocket | None = None) -> None:
         """Handle client disconnection.
@@ -287,9 +285,7 @@ class HeartbeatRegistry:
             if not brain_url:
                 continue
             for bs in brain_servers:
-                if _match_brain_url(
-                    brain_url, bs["instance_id"], bs.get("name", "")
-                ):
+                if _match_brain_url(brain_url, bs["instance_id"], bs.get("name", "")):
                     heartbeat_edges.append(
                         {
                             "from": f"wecom_client::{wc['instance_id']}",
