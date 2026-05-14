@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import socket
 import time
 from typing import Any
@@ -95,6 +96,7 @@ class HeartbeatRegistry:
         self._online: dict[str, bool] = {}
         self._websockets: dict[str, WebSocket] = {}
 
+        self._pending_commands: dict[str, asyncio.Future] = {}
         self._checker_task: asyncio.Task | None = None
 
     async def start_offline_checker(self, interval_s: int) -> None:
@@ -232,6 +234,60 @@ class HeartbeatRegistry:
                 return
         self._websockets.pop(instance_id, None)
         logger.info("heartbeat_disconnected", instance_id=instance_id)
+
+        # Cancel any pending commands for this instance
+        stale = [cid for cid in self._pending_commands if cid.startswith(f"{instance_id}:")]
+        for cid in stale:
+            fut = self._pending_commands.pop(cid, None)
+            if fut and not fut.done():
+                fut.set_exception(ConnectionError(f"Instance {instance_id} disconnected"))
+
+    async def send_command(self, instance_id: str, command: dict, timeout: float = 30.0) -> dict:
+        """Send a command to a connected instance via WebSocket and wait for result.
+
+        Args:
+            instance_id: Target instance ID
+            command: Command payload (must include 'action' and optionally 'serial')
+            timeout: Maximum wait time for the result
+
+        Returns:
+            The command_result payload from the remote instance
+
+        Raises:
+            ConnectionError: If instance is not connected
+            TimeoutError: If no response within timeout
+        """
+        ws = self._websockets.get(instance_id)
+        if ws is None:
+            raise ConnectionError(f"Instance {instance_id} is not connected")
+
+        command_id = command.get("command_id") or f"{instance_id}:{time.time_ns()}"
+        command["command_id"] = command_id
+        command["type"] = "command"
+
+        loop = asyncio.get_running_loop()
+        future: asyncio.Future = loop.create_future()
+        self._pending_commands[command_id] = future
+
+        try:
+            await ws.send_text(json.dumps(command))
+            result = await asyncio.wait_for(future, timeout=timeout)
+            return result
+        except asyncio.TimeoutError:
+            self._pending_commands.pop(command_id, None)
+            raise TimeoutError(f"Command {command_id} timed out after {timeout}s")
+        except Exception:
+            self._pending_commands.pop(command_id, None)
+            raise
+
+    def on_command_result(self, data: dict) -> None:
+        """Resolve a pending command future with the received result."""
+        command_id = data.get("command_id")
+        if not command_id:
+            return
+        future = self._pending_commands.pop(command_id, None)
+        if future and not future.done():
+            future.set_result(data)
 
     def get_snapshot(self) -> dict[str, Any]:
         """Return current state as a dict for merging into /api/state."""

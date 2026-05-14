@@ -64,6 +64,8 @@ async def websocket_heartbeat(ws: WebSocket) -> None:
                 await registry.on_event(instance_id, data)
             elif msg_type == "heartbeat":
                 await registry.on_heartbeat(instance_id, data)
+            elif msg_type == "command_result":
+                registry.on_command_result(data)
             # Silently ignore unknown types for forward compatibility
             await ws.send_text(json.dumps({"type": "ack"}))
 

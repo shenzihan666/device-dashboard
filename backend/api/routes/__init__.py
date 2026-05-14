@@ -1,5 +1,6 @@
 """Collect all API routers into a single list for app inclusion."""
 
+from backend.api.routes.commands import router as commands_router
 from backend.api.routes.entities import router as entities_router
 from backend.api.routes.events import router as events_router
 from backend.api.routes.heartbeat_ws import router as heartbeat_ws_router
@@ -20,4 +21,5 @@ all_routers = [
     websocket_router,
     heartbeat_ws_router,
     upload_router,
+    commands_router,
 ]

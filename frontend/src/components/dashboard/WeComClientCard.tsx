@@ -94,7 +94,12 @@ export default function WeComClientCard({ state }: WeComClientCardProps) {
       {expanded && state.devices.length > 0 && (
         <div className="space-y-2">
           {state.devices.map((device) => (
-            <WeComDeviceItem key={device.serial} device={device} />
+            <WeComDeviceItem
+              key={device.serial}
+              device={device}
+              instanceId={state.instance_id}
+              online={state.online}
+            />
           ))}
         </div>
       )}
