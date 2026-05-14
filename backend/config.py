@@ -21,14 +21,6 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # Grafana / Loki
-    grafana_url: str = "https://mynameisi.grafana.net"
-    api_token: str = ""
-    loki_datasource_uid: str = "grafanacloud-logs"
-
-    # LangSmith
-    langsmith_api_key: str = ""
-
     # Polling
     poll_interval_s: int = 10
     backfill_hours: int = 24

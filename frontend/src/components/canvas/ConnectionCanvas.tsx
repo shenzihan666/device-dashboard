@@ -55,49 +55,9 @@ export default function ConnectionCanvas({
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
   useEffect(() => {
-    const grafanaOn = dataSources.grafana_enabled;
     const p2pOn = dataSources.point_to_point_enabled;
 
     const rawNodes: Node[] = [
-      ...(grafanaOn ? snapshot.servers.map((s) => ({
-        id: buildNodeId('server', s.url),
-        type: 'server' as const,
-        data: {
-          label: s.url.replace('http://', '').replace('/chat', ''),
-          url: s.url,
-          deviceCount: s.device_count,
-        },
-        position: { x: 0, y: 0 },
-      })) : []),
-      ...(grafanaOn ? snapshot.hosts.map((h) => {
-        const processingCount = snapshot.devices.filter(
-          (d) => d.host === h.name && d.processing === true,
-        ).length;
-        return {
-          id: buildNodeId('host', h.name),
-          type: 'host' as const,
-          data: {
-            label: h.name,
-            status: h.status,
-            deviceCount: h.device_count,
-            processingCount,
-          },
-          position: { x: 0, y: 0 },
-        };
-      }) : []),
-      ...(grafanaOn ? snapshot.devices.map((d) => ({
-        id: buildNodeId('device', d.serial),
-        type: 'device' as const,
-        data: {
-          label: d.serial.slice(-6),
-          serial: d.serial,
-          host: d.host,
-          aiUrl: d.ai_url,
-          status: d.status,
-          processing: d.processing ?? false,
-        },
-        position: { x: 0, y: 0 },
-      })) : []),
       ...(p2pOn ? (snapshot.brain_servers || []).map((bs) => ({
         id: buildNodeId('brain_server', bs.instance_id),
         type: 'brain_server' as const,
@@ -129,40 +89,7 @@ export default function ConnectionCanvas({
       ) : []),
     ];
 
-    const rawEdges: Edge[] = grafanaOn ? snapshot.edges.map((e, i) => {
-      const isDeviceHost = e.type === 'device_host';
-      const fromId = isDeviceHost
-        ? buildNodeId('device', e.from)
-        : buildNodeId('server', e.to);
-      const toId = isDeviceHost
-        ? buildNodeId('host', e.to)
-        : buildNodeId('device', e.from);
-
-      const edgeColor = e.status === 'offline'
-        ? '#dc2626'
-        : isDeviceHost
-          ? '#9ca3af'
-          : '#16a34a';
-
-      return {
-        id: `edge-${i}-${e.from}-${e.to}`,
-        source: fromId,
-        target: toId,
-        type: 'default',
-        style: {
-          stroke: edgeColor,
-          strokeWidth: isDeviceHost ? 1.5 : 2,
-          strokeDasharray: isDeviceHost ? '5,5' : 'none',
-        },
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          color: edgeColor,
-          width: 16,
-          height: 16,
-        },
-        animated: !isDeviceHost && e.status !== 'offline',
-      };
-    }) : [];
+    const rawEdges: Edge[] = [];
 
     // Heartbeat edges (wecom_client -> brain_server)
     const hbEdges: Edge[] = p2pOn ? (snapshot.heartbeat_edges || []).map((e, i) => {

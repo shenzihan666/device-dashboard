@@ -68,7 +68,6 @@ export interface BrainServerState {
 }
 
 export interface DataSourcesState {
-  grafana_enabled: boolean;
   point_to_point_enabled: boolean;
 }
 
@@ -161,12 +160,10 @@ export async function resetLayout(): Promise<void> {
   await readEnvelope<{ cleared: boolean }>(res);
 }
 
-/* ── App settings (data-source toggles) ── */
+/* ─── App settings (data-source toggles) ───────────────────────────────────── */
 
 export interface AppSettingsState {
-  grafana_enabled: boolean;
   point_to_point_enabled: boolean;
-  langsmith_enabled: boolean;
 }
 
 export async function getAppSettings(): Promise<AppSettingsState> {
@@ -185,17 +182,30 @@ export async function updateAppSettings(
   return readEnvelope<AppSettingsState>(res);
 }
 
-/** LangSmith trace summary returned inside the API envelope `data`. */
-export interface LangsmithTraceSummary {
-  run_id: string;
-  name?: string;
-  status?: string;
-  latency_s?: number | null;
-  error?: string | null;
-  trace_url?: string | null;
+/* ─── Remote device commands ──────────────────────────────────────────── */
+
+export interface CommandResult {
+  success: boolean;
+  message: string;
 }
 
-export async function fetchLangsmithTrace(requestId: string): Promise<LangsmithTraceSummary> {
-  const res = await fetch(`/api/langsmith/trace?request_id=${encodeURIComponent(requestId)}`);
-  return readEnvelope<LangsmithTraceSummary>(res);
+export async function sendDeviceCommand(
+  instanceId: string,
+  serial: string,
+  action: 'start' | 'stop' | 'pause' | 'resume' | 'restart',
+): Promise<CommandResult> {
+  const res = await fetch(`/api/commands/wecom/${encodeURIComponent(instanceId)}/device/${encodeURIComponent(serial)}/${action}`, {
+    method: 'POST',
+  });
+  return readEnvelope<CommandResult>(res);
+}
+
+export async function restartWecomApp(
+  instanceId: string,
+  serial: string,
+): Promise<CommandResult> {
+  const res = await fetch(`/api/commands/wecom/${encodeURIComponent(instanceId)}/wecom-app/${encodeURIComponent(serial)}/restart`, {
+    method: 'POST',
+  });
+  return readEnvelope<CommandResult>(res);
 }

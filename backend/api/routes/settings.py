@@ -31,23 +31,14 @@ async def update_settings(
     request: Request,
 ) -> APIResponse[AppSettingsResponse]:
     updates: dict[str, str] = {}
-    if body.grafana_enabled is not None:
-        updates["grafana_enabled"] = str(body.grafana_enabled).lower()
     if body.point_to_point_enabled is not None:
         updates["point_to_point_enabled"] = str(body.point_to_point_enabled).lower()
-    if body.langsmith_enabled is not None:
-        updates["langsmith_enabled"] = str(body.langsmith_enabled).lower()
 
     if updates:
         now_ns = int(time.time() * _NANO)
         await repo.set_many(updates, now_ns)
 
     state = await load_effective(repo)
-
-    poller_manager = getattr(request.app.state, "poller_manager", None)
-    if poller_manager is not None:
-        await poller_manager.apply(state)
-        request.app.state.poller = poller_manager.poller
 
     heartbeat_manager = getattr(request.app.state, "heartbeat_manager", None)
     if heartbeat_manager is not None:

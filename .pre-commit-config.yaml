@@ -68,7 +68,7 @@ repos:
       - id: typecheck-frontend
         name: TypeScript type-check (frontend)
         language: system
-        entry: python scripts/typecheck_frontend.py
+        entry: uv run python scripts/typecheck_frontend.py
         files: ^frontend/.*\.(ts|tsx)$
         pass_filenames: false
         # tsc must see the whole project graph, so we don't pass filenames.
@@ -101,7 +101,7 @@ repos:
       - id: pytest-backend
         name: pytest (backend)
         language: system
-        entry: python scripts/run_pytest.py
+        entry: uv run python scripts/run_pytest.py
         pass_filenames: false
         always_run: true
         stages: [pre-push]

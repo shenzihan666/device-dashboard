@@ -5,7 +5,11 @@ uploads/
 
 # Local IDE / agent settings (do not commit)
 .claude/settings.local.json
+.claude/worktrees/
 .agents/
+
+# macOS
+.DS_Store
 __pycache__/
 *.pyc
 *.pyo

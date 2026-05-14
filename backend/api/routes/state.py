@@ -38,19 +38,13 @@ async def get_state(
             snapshot["wecom_clients"] = hb["wecom_clients"]
             snapshot["heartbeat_edges"] = hb["heartbeat_edges"]
 
-        # Filter by data source toggles
-        if not app_settings.grafana_enabled:
-            snapshot["servers"] = []
-            snapshot["hosts"] = []
-            snapshot["devices"] = []
-            snapshot["edges"] = []
+        # Only show point-to-point data now
         if not app_settings.point_to_point_enabled:
             snapshot["brain_servers"] = []
             snapshot["wecom_clients"] = []
             snapshot["heartbeat_edges"] = []
 
         snapshot["data_sources"] = {
-            "grafana_enabled": app_settings.grafana_enabled,
             "point_to_point_enabled": app_settings.point_to_point_enabled,
         }
         return APIResponse(data=snapshot)
@@ -68,7 +62,6 @@ async def get_state(
     replay.rebuild_from_events(events)
     snapshot = replay.get_snapshot()
     snapshot["data_sources"] = {
-        "grafana_enabled": app_settings.grafana_enabled,
         "point_to_point_enabled": app_settings.point_to_point_enabled,
     }
     return APIResponse(data=snapshot)

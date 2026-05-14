@@ -22,8 +22,6 @@ _NANO = 1_000_000_000
 def test_settings() -> Settings:
     return Settings(
         db_url="sqlite+aiosqlite:///:memory:",
-        api_token="",
-        grafana_url="https://test.grafana.net",
         log_level="DEBUG",
         log_format="console",
     )

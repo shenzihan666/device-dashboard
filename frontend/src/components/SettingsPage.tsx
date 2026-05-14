@@ -70,18 +70,6 @@ export default function SettingsPage({ settings, onUpdate }: SettingsPageProps) 
               checked={settings.point_to_point_enabled}
               onChange={(v) => onUpdate({ point_to_point_enabled: v })}
             />
-            <ToggleRow
-              label="Grafana"
-              description="Loki polling for sidecar logs"
-              checked={settings.grafana_enabled}
-              onChange={(v) => onUpdate({ grafana_enabled: v })}
-            />
-            <ToggleRow
-              label="LangSmith"
-              description="Trace lookup for request IDs"
-              checked={settings.langsmith_enabled}
-              onChange={(v) => onUpdate({ langsmith_enabled: v })}
-            />
           </div>
         </div>
       </div>

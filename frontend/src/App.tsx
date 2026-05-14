@@ -7,6 +7,7 @@ import Timeline from './components/Timeline';
 import DetailDrawer from './components/DetailDrawer';
 import Sidebar, { type Page } from './components/Sidebar';
 import SettingsPage from './components/SettingsPage';
+import Dashboard from './components/dashboard/Dashboard';
 import { useWebSocket } from './hooks/useWebSocket';
 import { useGraphState } from './hooks/useGraphState';
 import { useLayout } from './hooks/useLayout';
@@ -47,16 +48,6 @@ export default function App() {
     seekTo(tsNs);
   }, [seekTo]);
 
-  const canvasContent = (
-    <ConnectionCanvas
-      snapshot={snapshot}
-      dataSources={snapshot.data_sources ?? { grafana_enabled: appSettings.grafana_enabled, point_to_point_enabled: appSettings.point_to_point_enabled }}
-      positions={positions}
-      canvasMode={canvasMode}
-      onNodeDragStop={savePosition}
-    />
-  );
-
   const wsIndicator = (
     <div className="ml-auto flex items-center gap-2 text-xs text-geist-fg-muted">
       <span className={`w-2 h-2 rounded-full inline-block ${
@@ -74,22 +65,15 @@ export default function App() {
         <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} />
 
         {currentPage === 'dashboard' && (
-          <div className="grid grid-rows-[56px_1fr_80px]"
-            style={{ gridTemplateAreas: '"topbar" "graph" "timeline"' }}>
+          <div className="grid grid-rows-[56px_1fr]"
+            style={{ gridTemplateAreas: '"topbar" "content"' }}>
             <header className="flex items-center gap-4 px-5 bg-white border-b border-geist-border z-10"
               style={{ gridArea: 'topbar' }}>
               <span className="text-geist-fg font-semibold text-sm tracking-tight">Dashboard</span>
               {wsIndicator}
             </header>
-
-            <div className="relative overflow-hidden" style={{ gridArea: 'graph' }}>
-              {canvasContent}
-              <CanvasToolbar mode={canvasMode} onModeChange={setCanvasMode} onResetLayout={clearLayout} />
-            </div>
-
-            <div className="bg-geist-bg-subtle border-t border-geist-border flex flex-col px-4 py-1.5"
-              style={{ gridArea: 'timeline' }}>
-              <Timeline events={events} appMode={appMode} onSeek={handleSeek} />
+            <div style={{ gridArea: 'content' }}>
+              <Dashboard snapshot={snapshot} />
             </div>
           </div>
         )}
@@ -124,7 +108,13 @@ export default function App() {
             </header>
 
             <div className="relative overflow-hidden" style={{ gridArea: 'graph' }}>
-              {canvasContent}
+              <ConnectionCanvas
+                snapshot={snapshot}
+                dataSources={snapshot.data_sources ?? { point_to_point_enabled: appSettings.point_to_point_enabled }}
+                positions={positions}
+                canvasMode={canvasMode}
+                onNodeDragStop={savePosition}
+              />
               <CanvasToolbar mode={canvasMode} onModeChange={setCanvasMode} onResetLayout={clearLayout} />
             </div>
 
@@ -155,12 +145,11 @@ export default function App() {
         )}
       </div>
 
-      {/* Detail drawer (right) — only meaningful on canvas page */}
+      {/* Detail drawer (right) */}
       {selectedEvent && (
         <DetailDrawer
           event={selectedEvent}
           onClose={() => setSelectedEvent(null)}
-          langsmithEnabled={appSettings.langsmith_enabled}
         />
       )}
     </ReactFlowProvider>
