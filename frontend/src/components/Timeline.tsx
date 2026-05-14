@@ -158,14 +158,14 @@ export default function Timeline({ events, appMode, onSeek }: TimelineProps) {
   const formatTimeDisplay = (ns: number | null) => {
     if (!ns) return '--';
     const d = new Date(ns / 1e6);
-    return d.toLocaleString('zh-CN', { hour12: false });
+    return d.toLocaleString('en-US', { hour12: false });
   };
 
   const formatTimeRange = () => {
     if (!minNs || !maxNs) return '--';
     const dMin = new Date(minNs / 1e6);
     const dMax = new Date(maxNs / 1e6);
-    return `${dMin.toLocaleTimeString('zh-CN', { hour12: false })} — ${dMax.toLocaleTimeString('zh-CN', { hour12: false })}`;
+    return `${dMin.toLocaleTimeString('en-US', { hour12: false })} — ${dMax.toLocaleTimeString('en-US', { hour12: false })}`;
   };
 
   return (

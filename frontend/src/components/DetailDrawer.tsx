@@ -9,7 +9,7 @@ interface DetailDrawerProps {
 function formatTime(tsNs: number | undefined | null): string {
   if (!tsNs) return '--';
   const d = new Date(tsNs / 1e6);
-  return d.toLocaleString('zh-CN', { hour12: false });
+  return d.toLocaleString('en-US', { hour12: false });
 }
 
 export default function DetailDrawer({ event, onClose }: DetailDrawerProps) {

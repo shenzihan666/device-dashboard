@@ -14,13 +14,13 @@ export default function Dashboard({ snapshot }: DashboardProps) {
   return (
     <div className="w-full h-full overflow-y-auto p-6 bg-geist-bg-subtle">
       <div className="max-w-5xl mx-auto space-y-8">
-        {/* AI 大脑区域 */}
+        {/* AI Brain Section */}
         <section>
           <div className="flex items-center gap-2 mb-4">
             <div className="p-2 rounded-lg bg-orange-100">
               <Brain className="w-5 h-5 text-orange-600" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-800">AI 大脑</h2>
+            <h2 className="text-lg font-semibold text-gray-800">AI Brain</h2>
             {hasBrainServers && (
               <span className="text-xs text-gray-500">
                 ({snapshot.brain_servers.length})
@@ -36,19 +36,19 @@ export default function Dashboard({ snapshot }: DashboardProps) {
             </div>
           ) : (
             <div className="text-center py-12 bg-white rounded-xl border border-dashed border-geist-border">
-              <div className="text-gray-400 mb-2">暂无 AI 大脑服务器</div>
-              <div className="text-xs text-gray-400">等待心跳连接...</div>
+              <div className="text-gray-400 mb-2">No AI brain servers</div>
+              <div className="text-xs text-gray-400">Waiting for heartbeat...</div>
             </div>
           )}
         </section>
 
-        {/* 企微区域 */}
+        {/* WeCom Section */}
         <section>
           <div className="flex items-center gap-2 mb-4">
             <div className="p-2 rounded-lg bg-blue-100">
               <Monitor className="w-5 h-5 text-blue-600" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-800">企微客户端</h2>
+            <h2 className="text-lg font-semibold text-gray-800">WeCom Clients</h2>
             {hasWeComClients && (
               <span className="text-xs text-gray-500">
                 ({snapshot.wecom_clients.length})
@@ -64,8 +64,8 @@ export default function Dashboard({ snapshot }: DashboardProps) {
             </div>
           ) : (
             <div className="text-center py-12 bg-white rounded-xl border border-dashed border-geist-border">
-              <div className="text-gray-400 mb-2">暂无企微客户端</div>
-              <div className="text-xs text-gray-400">等待心跳连接...</div>
+              <div className="text-gray-400 mb-2">No WeCom clients</div>
+              <div className="text-xs text-gray-400">Waiting for heartbeat...</div>
             </div>
           )}
         </section>

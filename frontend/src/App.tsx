@@ -83,7 +83,7 @@ export default function App() {
             style={{ gridTemplateAreas: '"topbar topbar" "graph feed" "timeline timeline"' }}>
             <header className="flex items-center gap-4 px-5 bg-white border-b border-geist-border z-10"
               style={{ gridArea: 'topbar' }}>
-              <span className="text-geist-fg font-semibold text-sm tracking-tight">画板</span>
+              <span className="text-geist-fg font-semibold text-sm tracking-tight">Canvas</span>
 
               <div className="flex gap-0.5 bg-geist-bg-muted rounded-md p-0.5">
                 <button

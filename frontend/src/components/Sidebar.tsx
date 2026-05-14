@@ -9,7 +9,7 @@ interface SidebarProps {
 
 const NAV_ITEMS: { page: Page; icon: typeof LayoutDashboard; label: string }[] = [
   { page: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { page: 'canvas', icon: PenTool, label: '画板' },
+  { page: 'canvas', icon: PenTool, label: 'Canvas' },
   { page: 'settings', icon: Settings, label: 'Settings' },
 ];
 

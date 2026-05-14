@@ -18,10 +18,10 @@ const KIND_CONFIG: Record<string, { cls: string; label: string }> = {
   wecom_device_stopped: { cls: 'bg-gray-100 text-gray-600', label: 'STOPPED' },
   wecom_ai_request: { cls: 'bg-blue-50 text-blue-600', label: 'AI CALL' },
   wecom_red_dot_update: { cls: 'bg-red-50 text-red-600', label: 'RED DOT' },
-  wecom_followup_started: { cls: 'bg-amber-50 text-amber-700', label: '补刀 START' },
-  wecom_followup_progress: { cls: 'bg-amber-50 text-amber-600', label: '补刀 WIP' },
-  wecom_followup_result: { cls: 'bg-violet-50 text-violet-600', label: '补刀 RESULT' },
-  wecom_followup_finished: { cls: 'bg-emerald-50 text-emerald-700', label: '补刀 DONE' },
+  wecom_followup_started: { cls: 'bg-amber-50 text-amber-700', label: 'FOLLOW START' },
+  wecom_followup_progress: { cls: 'bg-amber-50 text-amber-600', label: 'FOLLOW WIP' },
+  wecom_followup_result: { cls: 'bg-violet-50 text-violet-600', label: 'FOLLOW RESULT' },
+  wecom_followup_finished: { cls: 'bg-emerald-50 text-emerald-700', label: 'FOLLOW DONE' },
 };
 
 const HIDDEN_KINDS = new Set(['host_device_map']);
@@ -29,7 +29,7 @@ const HIDDEN_KINDS = new Set(['host_device_map']);
 function formatTime(tsNs: number | undefined | null): string {
   if (!tsNs) return '--:--:--';
   const d = new Date(tsNs / 1e6);
-  return d.toLocaleTimeString('zh-CN', { hour12: false });
+  return d.toLocaleTimeString('en-US', { hour12: false });
 }
 
 function getBadge(kind: string) {
