@@ -92,7 +92,7 @@ export default function WeComDeviceItem({ device, instanceId, online }: WeComDev
               onClick={() => handleCommand('start')}
               disabled={loading !== null}
               className="p-1 rounded hover:bg-emerald-100 text-emerald-600 disabled:opacity-30 transition-colors"
-              title="启动实时回复"
+              title="Start realtime reply"
             >
               <Play className="w-3.5 h-3.5" />
             </button>
@@ -102,7 +102,7 @@ export default function WeComDeviceItem({ device, instanceId, online }: WeComDev
                 onClick={() => handleCommand('pause')}
                 disabled={loading !== null}
                 className="p-1 rounded hover:bg-amber-100 text-amber-600 disabled:opacity-30 transition-colors"
-                title="暂停实时回复"
+                title="Pause realtime reply"
               >
                 <Pause className="w-3.5 h-3.5" />
               </button>
@@ -110,7 +110,7 @@ export default function WeComDeviceItem({ device, instanceId, online }: WeComDev
                 onClick={() => handleCommand('resume')}
                 disabled={loading !== null}
                 className="p-1 rounded hover:bg-blue-100 text-blue-600 disabled:opacity-30 transition-colors"
-                title="恢复实时回复"
+                title="Resume realtime reply"
               >
                 <Play className="w-3.5 h-3.5" />
               </button>
@@ -118,7 +118,7 @@ export default function WeComDeviceItem({ device, instanceId, online }: WeComDev
                 onClick={() => handleCommand('stop')}
                 disabled={loading !== null}
                 className="p-1 rounded hover:bg-red-100 text-red-600 disabled:opacity-30 transition-colors"
-                title="停止实时回复"
+                title="Stop realtime reply"
               >
                 <Square className="w-3.5 h-3.5" />
               </button>
@@ -128,7 +128,7 @@ export default function WeComDeviceItem({ device, instanceId, online }: WeComDev
             onClick={() => handleCommand('restart')}
             disabled={loading !== null}
             className="p-1 rounded hover:bg-violet-100 text-violet-600 disabled:opacity-30 transition-colors"
-            title="重启实时回复"
+            title="Restart realtime reply"
           >
             <RotateCcw className={`w-3.5 h-3.5 ${loading === 'restart' ? 'animate-spin' : ''}`} />
           </button>
@@ -136,7 +136,7 @@ export default function WeComDeviceItem({ device, instanceId, online }: WeComDev
             onClick={handleAppRestart}
             disabled={loading !== null}
             className="p-1 rounded hover:bg-orange-100 text-orange-600 disabled:opacity-30 transition-colors ml-auto"
-            title="重启手机企微App"
+            title="Restart WeCom app on device"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading === 'app_restart' ? 'animate-spin' : ''}`} />
           </button>
@@ -165,7 +165,7 @@ export default function WeComDeviceItem({ device, instanceId, online }: WeComDev
         <div className="flex items-center gap-1.5 mb-1.5 text-[10px]">
           <Crosshair className="w-3 h-3 text-amber-600" />
           <span className="text-amber-700 truncate" title={followup.target ?? undefined}>
-            补刀: {followup.target || '...'}
+            Follow-up: {followup.target || '...'}
           </span>
         </div>
       )}

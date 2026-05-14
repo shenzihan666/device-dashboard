@@ -66,7 +66,7 @@ export default function WeComClientCard({ state }: WeComClientCardProps) {
         <div className="flex items-center gap-2">
           <Smartphone className="w-4 h-4 text-blue-500" />
           <span className="text-xs font-medium text-gray-700">
-            {state.device_count} 台设备
+            {state.device_count} device{state.device_count !== 1 ? 's' : ''}
           </span>
           {!isOffline && (
             <div className="flex gap-1">
@@ -106,7 +106,7 @@ export default function WeComClientCard({ state }: WeComClientCardProps) {
 
       {expanded && state.devices.length === 0 && (
         <div className="text-center py-4 text-xs text-gray-400">
-          暂无设备
+          No devices
         </div>
       )}
     </div>

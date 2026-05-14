@@ -85,7 +85,7 @@ export default function WeComDeviceNode({ data, selected }: WeComDeviceNodeProps
         <div className="flex items-center gap-1 mb-1 text-[10px]">
           <Crosshair className="w-3 h-3 text-amber-600" />
           <span className="text-amber-700 truncate max-w-[120px]" title={followup.target ?? undefined}>
-            补刀: {followup.target || '...'}
+            Follow-up: {followup.target || '...'}
           </span>
         </div>
       )}

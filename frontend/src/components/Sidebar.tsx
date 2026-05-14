@@ -19,7 +19,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
             : 'text-geist-fg-muted hover:bg-geist-bg-muted hover:text-geist-fg'
           }
         `}
-        title="Canvas (拓扑图)"
+        title="Canvas (Topology)"
       >
         <LayoutGrid className="w-5 h-5" />
       </button>
@@ -33,7 +33,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
             : 'text-geist-fg-muted hover:bg-geist-bg-muted hover:text-geist-fg'
           }
         `}
-        title="Dashboard (仪表盘)"
+        title="Dashboard"
       >
         <Activity className="w-5 h-5" />
       </button>
