@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Dashboard and Settings pages: the grid `1fr` content row uses `min-h-0` (and a clipping wrapper) so the inner `h-full overflow-y-auto` region gets a bounded height and long card lists scroll instead of growing past the viewport.
 - WebSocket `/ws/live` handler uses `ws.app.state` for the broadcaster (avoids relying on `Request` injection on the websocket route).
 - Graph canvas in **Edit** mode: wire `onNodesChange` / `onEdgesChange` with `useNodesState` / `useEdgesState` so nodes move smoothly while dragging instead of only after mouse-up.
 - Event feed: render `device_processing` `priority_count` via `String(...)` for consistent React text children.

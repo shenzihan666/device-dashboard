@@ -65,14 +65,14 @@ export default function App() {
         <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} />
 
         {currentPage === 'dashboard' && (
-          <div className="grid grid-rows-[56px_1fr]"
+          <div className="grid grid-rows-[56px_1fr] min-h-0 h-full"
             style={{ gridTemplateAreas: '"topbar" "content"' }}>
             <header className="flex items-center gap-4 px-5 bg-white border-b border-geist-border z-10"
               style={{ gridArea: 'topbar' }}>
               <span className="text-geist-fg font-semibold text-sm tracking-tight">Dashboard</span>
               {wsIndicator}
             </header>
-            <div style={{ gridArea: 'content' }}>
+            <div className="min-h-0 overflow-hidden" style={{ gridArea: 'content' }}>
               <Dashboard snapshot={snapshot} />
             </div>
           </div>
@@ -131,14 +131,14 @@ export default function App() {
         )}
 
         {currentPage === 'settings' && (
-          <div className="grid grid-rows-[56px_1fr]"
+          <div className="grid grid-rows-[56px_1fr] min-h-0 h-full"
             style={{ gridTemplateAreas: '"topbar" "content"' }}>
             <header className="flex items-center gap-4 px-5 bg-white border-b border-geist-border z-10"
               style={{ gridArea: 'topbar' }}>
               <span className="text-geist-fg font-semibold text-sm tracking-tight">Settings</span>
               {wsIndicator}
             </header>
-            <div style={{ gridArea: 'content' }}>
+            <div className="min-h-0 overflow-hidden" style={{ gridArea: 'content' }}>
               <SettingsPage settings={appSettings} onUpdate={updateAppSettings} />
             </div>
           </div>

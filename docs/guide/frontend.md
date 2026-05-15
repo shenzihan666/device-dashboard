@@ -4,12 +4,13 @@ The UI lives in `frontend/` and is built with **Vite**, **React**, **Tailwind CS
 
 ## Layout shell
 
-The main app grid (`App.tsx`):
+The root layout (`App.tsx`) is a **two-column grid**: a fixed **sidebar** (`Sidebar.tsx`, ~200px) for switching pages, plus a **main** area that depends on the active route:
 
-- **Top bar** — title, LIVE/REPLAY toggle, **Settings** (gear) opening a left drawer for **Data Source** toggles, WebSocket status.
-- **Center** — React Flow canvas with floating **View / Edit** toolbar (`CanvasToolbar.tsx`): same muted-track **segmented** pattern as LIVE/REPLAY (active segment is white on `geist-bg-muted`) so labels stay legible on the dot grid; **Edit** enables dragging with controlled node state (`useNodesState` + `onNodesChange`) so the canvas repaints while dragging; final positions persist via `/api/layout` on drag end.
-- **Right column** — event feed.
-- **Bottom** — timeline scrubber for replay.
+- **Dashboard** — Top bar (title + WebSocket status) and a **scrollable** body (`Dashboard.tsx`). The shell grid uses `min-h-0` on the `1fr` content row and wraps the page in `overflow-hidden` so the inner `h-full overflow-y-auto` layer gets a bounded height. (Without `min-h-0`, CSS Grid’s default `min-height: auto` on `1fr` tracks lets the row grow with content, which suppresses nested scrolling.)
+
+- **Canvas** — Top bar with **LIVE / REPLAY** toggle and WebSocket status; **center** — React Flow graph with floating **View / Edit** toolbar (`CanvasToolbar.tsx`): same muted-track **segmented** pattern as LIVE/REPLAY (active segment is white on `geist-bg-muted`); **Edit** uses `useNodesState` + `onNodesChange` so the canvas repaints while dragging; positions persist via `/api/layout` on drag end. **Right column** — event feed. **Bottom** — timeline scrubber for replay.
+
+- **Settings** — Top bar plus full-page **Settings** (`SettingsPage.tsx`) using the same scroll-friendly grid pattern as Dashboard (data-source toggles such as point-to-point live under `/api/settings`).
 
 ## Graph semantics
 
@@ -40,10 +41,13 @@ Server→device links are drawn as **server → device**; device→host links as
 
 | Path | Role |
 |------|------|
+| `src/App.tsx` | Root grid: sidebar + Dashboard / Canvas / Settings shells |
+| `src/components/Sidebar.tsx` | Page navigation (Dashboard, Canvas, Settings) |
+| `src/components/dashboard/Dashboard.tsx` | Brain server and WeCom client cards (scrollable body) |
+| `src/components/SettingsPage.tsx` | Settings form (scrollable body) |
 | `src/components/canvas/CanvasToolbar.tsx` | Floating View / Edit mode toggle and reset layout |
 | `src/components/canvas/ConnectionCanvas.tsx` | React Flow, edges, background |
 | `src/utils/dagreLayout.ts` | Auto-layout for nodes without saved positions |
 | `src/components/canvas/*Node.tsx` | Server / Device / Host card UI |
-| `src/components/SettingsDrawer.tsx` | Left settings panel (data-source switches) |
 | `src/hooks/useAppSettings.ts` | Load and update `/api/settings` with optimistic UI |
 | `src/services/api.ts` | Types and fetch helpers for backend APIs |

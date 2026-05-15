@@ -4,6 +4,7 @@ Real-time dashboard tracking WeCom client (enterprise WeChat) connections to AI 
 
 Receives real-time heartbeat events via WebSocket (`/ws/heartbeat`) from WeCom clients and brain servers; also supports manual file uploads. Events persist to SQLite and push over WebSocket to a browser SPA with:
 
+- **Sidebar pages** — **Dashboard** (brain / WeCom overview cards), **Canvas** (graph + feed + timeline), and **Settings** (`/api/settings`)
 - **Live workflow-style graph** — BrainServer, WeComClient, and WeComDevice as card nodes ([React Flow](https://reactflow.dev/) / `@xyflow/react`), dot background, controls, and minimap; **shell UI** uses a minimal light (Vercel-style) chrome around the canvas ([frontend theming](docs/guide/frontend.md#theming))
 - **View / Edit layout** — default view is read-only; **Edit** enables dragging nodes; positions persist in SQLite via `GET/PUT/DELETE /api/layout`
 - **Event feed** — chronological right-side panel with device launch/stop/AI-request/red-dot events
