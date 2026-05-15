@@ -40,6 +40,10 @@ class EventRepository(Protocol):
         self, from_ns: int, to_ns: int, buckets: int = 100
     ) -> list[dict[str, Any]]: ...
 
+    async def get_latest_hb_state(self, ts_ns: int) -> list[dict[str, Any]]:
+        """Get heartbeat instances connected at the given timestamp."""
+        ...
+
 
 class EntityRepository(Protocol):
     async def upsert(

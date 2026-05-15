@@ -22,6 +22,8 @@ const KIND_CONFIG: Record<string, { cls: string; label: string }> = {
   wecom_followup_progress: { cls: 'bg-amber-50 text-amber-600', label: 'FOLLOW WIP' },
   wecom_followup_result: { cls: 'bg-violet-50 text-violet-600', label: 'FOLLOW RESULT' },
   wecom_followup_finished: { cls: 'bg-emerald-50 text-emerald-700', label: 'FOLLOW DONE' },
+  hb_instance_connected: { cls: 'bg-emerald-50 text-emerald-600', label: 'CONNECT' },
+  hb_instance_disconnected: { cls: 'bg-red-50 text-red-600', label: 'DISCONNECT' },
 };
 
 const HIDDEN_KINDS = new Set(['host_device_map']);

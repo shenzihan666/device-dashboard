@@ -114,6 +114,43 @@ class SQLAlchemyEventRepository:
         )
         return [{"ts_ns": row[0], "count": row[1]} for row in result.fetchall()]
 
+    async def get_latest_hb_state(self, ts_ns: int) -> list[dict[str, Any]]:
+        """Get the effective heartbeat connection state at *ts_ns*.
+
+        Returns one row per instance whose latest lifecycle event before
+        *ts_ns* is a connect (i.e. the instance was online at that time).
+        Uses a window function for efficiency with the events_kind_ts index.
+        """
+        stmt = text(
+            "SELECT instance_id, kind, payload_json, ts_ns "
+            "FROM ("
+            "  SELECT host AS instance_id, kind, payload_json, ts_ns, "
+            "    ROW_NUMBER() OVER (PARTITION BY host ORDER BY ts_ns DESC) AS rn "
+            "  FROM events "
+            "  WHERE kind IN ('hb_instance_connected', 'hb_instance_disconnected') "
+            "    AND ts_ns <= :ts_ns"
+            ") "
+            "WHERE rn = 1 AND kind = 'hb_instance_connected'"
+        )
+        result = await self._session.execute(stmt, {"ts_ns": ts_ns})
+        rows = []
+        for row in result.fetchall():
+            payload = {}
+            if row[2]:
+                try:
+                    payload = json.loads(row[2])
+                except (json.JSONDecodeError, TypeError):
+                    pass
+            rows.append(
+                {
+                    "instance_id": row[0],
+                    "kind": row[1],
+                    "payload_json": payload,
+                    "ts_ns": row[3],
+                }
+            )
+        return rows
+
     @staticmethod
     def _model_to_dict(model: EventModel) -> dict[str, Any]:
         d: dict[str, Any] = {

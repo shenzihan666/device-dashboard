@@ -53,3 +53,7 @@ WECOM_FOLLOWUP_STARTED = "wecom_followup_started"
 WECOM_FOLLOWUP_PROGRESS = "wecom_followup_progress"
 WECOM_FOLLOWUP_RESULT = "wecom_followup_result"
 WECOM_FOLLOWUP_FINISHED = "wecom_followup_finished"
+
+# Heartbeat instance lifecycle (connect / disconnect)
+HB_INSTANCE_CONNECTED = "hb_instance_connected"
+HB_INSTANCE_DISCONNECTED = "hb_instance_disconnected"
