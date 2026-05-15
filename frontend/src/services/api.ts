@@ -209,3 +209,48 @@ export async function restartWecomApp(
   });
   return readEnvelope<CommandResult>(res);
 }
+
+/* ─── Device file list & viewer ──────────────────────────────────── */
+
+export interface DeviceFileInfo {
+  file_id: string;
+  filename: string;
+  size: number;
+  uploaded_at: string;
+  source_system: string;
+  upload_kind: string;
+  extension: string;
+}
+
+export interface DeviceFilesListResponse {
+  device_id: string;
+  total_files: number;
+  files: DeviceFileInfo[];
+}
+
+export interface FileContentResponse {
+  file_id: string;
+  filename: string;
+  offset: number;
+  limit: number;
+  total_lines: number;
+  lines: string[];
+  truncated: boolean;
+}
+
+export async function getDeviceFiles(deviceId: string): Promise<DeviceFilesListResponse> {
+  const res = await fetch(`/api/uploads/${encodeURIComponent(deviceId)}`);
+  return readEnvelope<DeviceFilesListResponse>(res);
+}
+
+export async function getFileContent(
+  deviceId: string,
+  fileId: string,
+  offset = 0,
+  limit = 500,
+): Promise<FileContentResponse> {
+  const res = await fetch(
+    `/api/uploads/${encodeURIComponent(deviceId)}/${encodeURIComponent(fileId)}/content?offset=${offset}&limit=${limit}`,
+  );
+  return readEnvelope<FileContentResponse>(res);
+}

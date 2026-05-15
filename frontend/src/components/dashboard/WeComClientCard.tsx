@@ -5,9 +5,10 @@ import WeComDeviceItem from './WeComDeviceItem';
 
 interface WeComClientCardProps {
   state: WeComClientState;
+  onViewLogs?: (deviceId: string, deviceName: string) => void;
 }
 
-export default function WeComClientCard({ state }: WeComClientCardProps) {
+export default function WeComClientCard({ state, onViewLogs }: WeComClientCardProps) {
   const [expanded, setExpanded] = useState(true);
   const isOffline = !state.online;
 
@@ -99,6 +100,7 @@ export default function WeComClientCard({ state }: WeComClientCardProps) {
               device={device}
               instanceId={state.instance_id}
               online={state.online}
+              onViewLogs={onViewLogs}
             />
           ))}
         </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Smartphone, Brain, Crosshair, Circle, Play, Pause, Square, RotateCcw, RefreshCw } from 'lucide-react';
+import { Smartphone, Brain, Crosshair, Circle, Play, Pause, Square, RotateCcw, RefreshCw, FileText } from 'lucide-react';
 import type { WeComDevice } from '../../services/api';
 import { sendDeviceCommand, restartWecomApp } from '../../services/api';
 
@@ -7,9 +7,10 @@ interface WeComDeviceItemProps {
   device: WeComDevice;
   instanceId?: string;
   online?: boolean;
+  onViewLogs?: (deviceId: string, deviceName: string) => void;
 }
 
-export default function WeComDeviceItem({ device, instanceId, online }: WeComDeviceItemProps) {
+export default function WeComDeviceItem({ device, instanceId, online, onViewLogs }: WeComDeviceItemProps) {
   const isRunning = device.running === true;
   const redDots = device.red_dot_pending ?? 0;
   const currentTarget = device.current_target;
@@ -57,6 +58,13 @@ export default function WeComDeviceItem({ device, instanceId, online }: WeComDev
         <span className="font-medium text-xs text-gray-700 truncate flex-1">
           {device.name || device.serial}
         </span>
+        <button
+          onClick={(e) => { e.stopPropagation(); onViewLogs?.(device.serial, device.name || device.serial); }}
+          className="p-1 rounded hover:bg-blue-100 text-gray-400 hover:text-blue-500 transition-colors"
+          title="View log files"
+        >
+          <FileText className="w-3.5 h-3.5" />
+        </button>
         {isRunning && (
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />

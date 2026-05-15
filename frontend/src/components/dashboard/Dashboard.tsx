@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Brain, Monitor } from 'lucide-react';
 import type { StateSnapshot } from '../../services/api';
 import BrainServerCard from './BrainServerCard';
 import WeComClientCard from './WeComClientCard';
+import DeviceFileDrawer from '../DeviceFileDrawer';
 
 interface DashboardProps {
   snapshot: StateSnapshot;
@@ -10,6 +12,7 @@ interface DashboardProps {
 export default function Dashboard({ snapshot }: DashboardProps) {
   const hasBrainServers = snapshot.brain_servers && snapshot.brain_servers.length > 0;
   const hasWeComClients = snapshot.wecom_clients && snapshot.wecom_clients.length > 0;
+  const [logsDevice, setLogsDevice] = useState<{ id: string; name: string } | null>(null);
 
   return (
     <div className="w-full h-full overflow-y-auto p-6 bg-geist-bg-subtle">
@@ -59,7 +62,8 @@ export default function Dashboard({ snapshot }: DashboardProps) {
           {hasWeComClients ? (
             <div className="space-y-4">
               {snapshot.wecom_clients.map((client) => (
-                <WeComClientCard key={client.instance_id} state={client} />
+                <WeComClientCard key={client.instance_id} state={client}
+                  onViewLogs={(id, name) => setLogsDevice({ id, name })} />
               ))}
             </div>
           ) : (
@@ -70,6 +74,14 @@ export default function Dashboard({ snapshot }: DashboardProps) {
           )}
         </section>
       </div>
+
+      {logsDevice && (
+        <DeviceFileDrawer
+          deviceId={logsDevice.id}
+          deviceName={logsDevice.name}
+          onClose={() => setLogsDevice(null)}
+        />
+      )}
     </div>
   );
 }

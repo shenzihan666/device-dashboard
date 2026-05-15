@@ -12,12 +12,25 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 import structlog
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
 
 from backend.api.dependencies import SettingsDep
 from backend.api.schemas.common import APIResponse
-from backend.api.schemas.upload import UploadResponse
-from backend.core.services.file_storage import FileStorageService
+from backend.api.schemas.upload import (
+    DeviceFileInfo,
+    DeviceFilesListResponse,
+    FileContentResponse,
+    UploadResponse,
+)
+from backend.core.services.file_reader import (
+    DEFAULT_PAGE_SIZE,
+    MAX_PAGE_SIZE,
+    TEXT_EXTENSIONS,
+    compute_file_id,
+    read_line_range,
+    resolve_file_id,
+)
+from backend.core.services.file_storage import FileStorageService, _sanitize_segment
 
 logger = structlog.get_logger(__name__)
 
@@ -231,3 +244,136 @@ async def uploads_test(settings: SettingsDep) -> dict[str, str]:
         "allowed_extensions": ", ".join(settings.upload_allowed_extensions),
         "max_size_mb": str(settings.upload_max_size_mb),
     }
+
+
+@router.get("/uploads/{device_id}", response_model=APIResponse[DeviceFilesListResponse])
+async def list_device_files(
+    device_id: str,
+    settings: SettingsDep,
+) -> APIResponse[DeviceFilesListResponse]:
+    """List all uploaded files for a device."""
+    safe_identity = _sanitize_segment(device_id)
+    upload_dir = settings.upload_dir.resolve()
+
+    if not upload_dir.exists():
+        return APIResponse(
+            data=DeviceFilesListResponse(device_id=device_id, total_files=0, files=[])
+        )
+
+    files: list[DeviceFileInfo] = []
+    for source_dir in upload_dir.iterdir():
+        if not source_dir.is_dir():
+            continue
+        identity_dir = source_dir / safe_identity
+        if not identity_dir.is_dir():
+            continue
+        source_system = source_dir.name
+        for f in identity_dir.rglob("*"):
+            if not f.is_file():
+                continue
+            f_resolved = f.resolve()
+            if not str(f_resolved).startswith(str(upload_dir)):
+                continue
+
+            rel = f_resolved.relative_to(identity_dir)
+            parts = rel.parts
+            upload_kind = parts[0] if len(parts) >= 2 else ""
+            date_segment = parts[1] if len(parts) >= 3 else ""
+            name_part = parts[-1] if parts else f.name
+
+            # Try to parse date+time from directory structure
+            uploaded_at = _now_utc()
+            try:
+                from datetime import datetime as _dt
+
+                time_prefix = name_part.split("-")[0] if "-" in name_part else ""
+                if date_segment and time_prefix and len(time_prefix) == 6:
+                    uploaded_at = _dt.strptime(
+                        f"{date_segment}{time_prefix}", "%Y-%m-%d%H%M%S"
+                    ).replace(tzinfo=timezone.utc)
+            except (ValueError, IndexError):
+                pass
+
+            # Strip HHMMSS- prefix for display filename
+            display_name = name_part
+            if (
+                "-" in name_part
+                and name_part.split("-")[0].isdigit()
+                and len(name_part.split("-")[0]) == 6
+            ):
+                display_name = name_part.split("-", 1)[1]
+
+            stat = f_resolved.stat()
+            files.append(
+                DeviceFileInfo(
+                    file_id=compute_file_id(f_resolved, upload_dir),
+                    filename=display_name,
+                    size=stat.st_size,
+                    uploaded_at=uploaded_at,
+                    source_system=source_system,
+                    upload_kind=upload_kind,
+                    extension=f_resolved.suffix.lower(),
+                )
+            )
+
+    files.sort(key=lambda x: x.uploaded_at, reverse=True)
+    return APIResponse(
+        data=DeviceFilesListResponse(device_id=device_id, total_files=len(files), files=files)
+    )
+
+
+@router.get(
+    "/uploads/{device_id}/{file_id}/content",
+    response_model=APIResponse[FileContentResponse],
+)
+async def get_file_content(
+    device_id: str,
+    file_id: str,
+    settings: SettingsDep,
+    offset: int = Query(0, ge=0),
+    limit: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
+) -> APIResponse[FileContentResponse]:
+    """Read paginated content of an uploaded file."""
+    upload_dir = settings.upload_dir.resolve()
+    file_path = resolve_file_id(device_id, file_id, upload_dir, _sanitize_segment)
+
+    if file_path is None:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    # Binary files cannot be viewed as text
+    ext = file_path.suffix.lower()
+    if ext not in TEXT_EXTENSIONS:
+        return APIResponse(
+            data=FileContentResponse(
+                file_id=file_id,
+                filename=file_path.name,
+                offset=0,
+                limit=limit,
+                total_lines=1,
+                lines=[f"[Binary file: {file_path.name} — preview not available]"],
+                truncated=False,
+            )
+        )
+
+    lines, total_lines = read_line_range(file_path, offset=offset, limit=limit)
+
+    # Use stripped display name
+    display_name = file_path.name
+    if (
+        "-" in display_name
+        and display_name.split("-")[0].isdigit()
+        and len(display_name.split("-")[0]) == 6
+    ):
+        display_name = display_name.split("-", 1)[1]
+
+    return APIResponse(
+        data=FileContentResponse(
+            file_id=file_id,
+            filename=display_name,
+            offset=offset,
+            limit=limit,
+            total_lines=total_lines,
+            lines=lines,
+            truncated=False,
+        )
+    )

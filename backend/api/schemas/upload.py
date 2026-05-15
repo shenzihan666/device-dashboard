@@ -30,3 +30,29 @@ class FileInfo(BaseModel):
 
 class FilesListResponse(BaseModel):
     files: list[FileInfo]
+
+
+class DeviceFileInfo(BaseModel):
+    file_id: str
+    filename: str
+    size: int
+    uploaded_at: datetime
+    source_system: str
+    upload_kind: str
+    extension: str
+
+
+class DeviceFilesListResponse(BaseModel):
+    device_id: str
+    total_files: int
+    files: list[DeviceFileInfo]
+
+
+class FileContentResponse(BaseModel):
+    file_id: str
+    filename: str
+    offset: int
+    limit: int
+    total_lines: int
+    lines: list[str]
+    truncated: bool
