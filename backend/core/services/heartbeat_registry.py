@@ -25,7 +25,7 @@ def _is_local(host: str) -> bool:
     return host.lower() in _LOCALHOST_ALIASES
 
 
-def _match_brain_url(brain_url: str, bs_instance_id: str, bs_name: str) -> bool:
+def _match_brain_url(brain_url: str, bs_instance_id: str, bs_name: str, bs_ip: str = "") -> bool:
     """Check whether *brain_url* points to the given brain server.
 
     Uses URL host+port comparison with localhost normalisation instead of
@@ -73,6 +73,10 @@ def _match_brain_url(brain_url: str, bs_instance_id: str, bs_name: str) -> bool:
                 return True
         except Exception:
             pass
+
+    # IP match: brain_url host vs brain server's reported public IP
+    if bs_ip and url_host == bs_ip:
+        return True
 
     return False
 
@@ -305,6 +309,7 @@ class HeartbeatRegistry:
                     {
                         "instance_id": iid,
                         "name": data.get("name", iid),
+                        "ip": data.get("ip", ""),
                         "version": data.get("version", ""),
                         "worker_count": data.get("worker_count", 0),
                         "total_handled": data.get("total_handled", 0),
@@ -335,13 +340,27 @@ class HeartbeatRegistry:
                     }
                 )
 
+        # Deduplicate brain_servers by name: keep online or most recent
+        seen_names: dict[str, dict] = {}
+        for bs in brain_servers:
+            name = bs["name"]
+            if name not in seen_names:
+                seen_names[name] = bs
+            elif bs["online"] and not seen_names[name]["online"]:
+                seen_names[name] = bs
+            elif bs["last_heartbeat_ns"] > seen_names[name]["last_heartbeat_ns"]:
+                seen_names[name] = bs
+        brain_servers = list(seen_names.values())
+
         # Build edges: wecom_client -> brain_server
         for wc in wecom_clients:
             brain_url = wc.get("brain_url", "")
             if not brain_url:
                 continue
             for bs in brain_servers:
-                if _match_brain_url(brain_url, bs["instance_id"], bs.get("name", "")):
+                if _match_brain_url(
+                    brain_url, bs["instance_id"], bs.get("name", ""), bs.get("ip", "")
+                ):
                     heartbeat_edges.append(
                         {
                             "from": f"wecom_client::{wc['instance_id']}",
@@ -370,11 +389,23 @@ class HeartbeatRegistry:
             await asyncio.sleep(interval_s)
             now_ns = int(time.time() * _NANO)
             newly_offline: list[str] = []
+            to_remove: list[str] = []
 
             for iid, last_ns in list(self._last_seen.items()):
-                if self._online.get(iid) and (now_ns - last_ns) > self._offline_grace_ns:
+                age_ns = now_ns - last_ns
+                if self._online.get(iid) and age_ns > self._offline_grace_ns:
                     self._online[iid] = False
                     newly_offline.append(iid)
+                # Purge instances offline for more than 20x grace period (~10 min)
+                if not self._online.get(iid, True) and age_ns > self._offline_grace_ns * 20:
+                    to_remove.append(iid)
+
+            for iid in to_remove:
+                self._instances.pop(iid, None)
+                self._instance_types.pop(iid, None)
+                self._last_seen.pop(iid, None)
+                self._online.pop(iid, None)
+                self._websockets.pop(iid, None)
 
             if newly_offline:
                 logger.info(
@@ -384,4 +415,11 @@ class HeartbeatRegistry:
                 )
                 await self._broadcaster.broadcast(
                     {"type": "heartbeat_update", "offline": newly_offline}
+                )
+
+            if to_remove:
+                logger.info(
+                    "heartbeat_instances_purged",
+                    count=len(to_remove),
+                    instance_ids=to_remove,
                 )
