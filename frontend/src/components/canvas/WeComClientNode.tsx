@@ -23,7 +23,7 @@ export default function WeComClientNode({ data, selected }: WeComClientNodeProps
       ${isOffline ? 'bg-gray-100 border-gray-300 opacity-60' : 'bg-blue-50 border-blue-400'}
       ${selected ? 'shadow-lg ring-2 ring-blue-400/50' : ''}
     `}>
-      <Handle type="source" position={Position.Top} className="!w-3 !h-3 !bg-blue-400 !border-blue-400" />
+      <Handle id="src-top" type="source" position={Position.Top} className="!w-3 !h-3 !bg-blue-400 !border-blue-400" />
 
       <div className="flex items-center gap-2 mb-2">
         <div className="text-blue-600">
@@ -91,7 +91,7 @@ export default function WeComClientNode({ data, selected }: WeComClientNodeProps
         </div>
       )}
 
-      <Handle type="source" position={Position.Bottom} className="!w-3 !h-3 !bg-blue-400 !border-blue-400" />
+      <Handle id="src-bottom" type="source" position={Position.Bottom} className="!w-3 !h-3 !bg-blue-400 !border-blue-400" />
     </div>
   );
 }

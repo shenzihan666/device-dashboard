@@ -98,6 +98,7 @@ export default function ConnectionCanvas({
         id: `hb-edge-${i}-${e.from}-${e.to}`,
         source: e.from,
         target: e.to,
+        sourceHandle: 'src-top',
         type: 'default',
         style: {
           stroke: edgeColor,
@@ -120,6 +121,7 @@ export default function ConnectionCanvas({
         id: `wc-dev-${wc.instance_id}-${dev.serial}-${di}`,
         source: buildNodeId('wecom_client', wc.instance_id),
         target: `wecom_device::${wc.instance_id}/${dev.serial}`,
+        sourceHandle: 'src-bottom',
         type: 'default',
         style: {
           stroke: dev.running ? '#3b82f6' : '#9ca3af',
