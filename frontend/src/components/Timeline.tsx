@@ -38,12 +38,12 @@ export default function Timeline({ events, appMode, onSeek }: TimelineProps) {
     }
   }, [appMode, events]);
 
-  // Keep cursor at max in live mode
+  // Snap cursor to latest only when switching to live mode
   useEffect(() => {
     if (appMode === 'live' && maxNs) {
       setCursorNs(maxNs);
     }
-  }, [appMode, maxNs, events]);
+  }, [appMode]);
 
   // Periodic density refresh in live mode
   useEffect(() => {
@@ -110,13 +110,26 @@ export default function Timeline({ events, appMode, onSeek }: TimelineProps) {
       ctx.fill();
     }
 
+    // "Now" marker in replay mode (thin dashed green line at maxNs)
+    if (appMode === 'replay' && maxNs && cursorNs !== maxNs) {
+      const nowX = ((maxNs - minNs) / range) * w;
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.5)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(nowX, 0);
+      ctx.lineTo(nowX, h);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
     ctx.strokeStyle = '#ededed';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.lineTo(w, 0);
     ctx.stroke();
-  }, [minNs, maxNs, cursorNs, density]);
+  }, [minNs, maxNs, cursorNs, density, appMode]);
 
   useEffect(() => {
     draw();

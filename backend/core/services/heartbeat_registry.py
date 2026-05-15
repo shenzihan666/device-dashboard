@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 import structlog
 from fastapi import WebSocket
 
-from backend.core.domain.events import Event
+from backend.core.domain.events import HB_INSTANCE_CONNECTED, HB_INSTANCE_DISCONNECTED, Event
 from backend.infrastructure.websocket.broadcaster import Broadcaster
 
 logger = structlog.get_logger(__name__)
@@ -98,6 +98,7 @@ class HeartbeatRegistry:
 
         self._pending_commands: dict[str, asyncio.Future] = {}
         self._checker_task: asyncio.Task | None = None
+        self._disconnect_persisted: set[str] = set()
 
     async def start_offline_checker(self, interval_s: int) -> None:
         """Start background task that checks for offline instances."""
@@ -119,6 +120,34 @@ class HeartbeatRegistry:
         self._last_seen.clear()
         self._online.clear()
         self._websockets.clear()
+        self._disconnect_persisted.clear()
+
+    async def _persist_hb_event(self, kind: str, instance_id: str, payload: dict) -> None:
+        """Persist a heartbeat lifecycle event to the event store."""
+        if not self._session_factory:
+            return
+        try:
+            from backend.infrastructure.database.repositories.event_repo import (
+                SQLAlchemyEventRepository,
+            )
+
+            async with self._session_factory() as session:
+                repo = SQLAlchemyEventRepository(session)
+                event = Event(
+                    ts_ns=int(time.time() * _NANO),
+                    kind=kind,
+                    host=instance_id,
+                    device_serial=None,
+                    payload=payload,
+                )
+                await repo.insert(event)
+        except Exception as exc:
+            logger.warning(
+                "hb_event_persist_error",
+                kind=kind,
+                instance_id=instance_id,
+                error=str(exc),
+            )
 
     async def on_connect(self, instance_id: str, instance_type: str, ws: WebSocket) -> bool:
         """Register a new connection.  Returns True if accepted, False if rejected.
@@ -152,6 +181,7 @@ class HeartbeatRegistry:
         self._websockets[instance_id] = ws
         self._instance_types[instance_id] = instance_type
         self._online[instance_id] = True
+        self._disconnect_persisted.discard(instance_id)
         logger.info(
             "heartbeat_connected",
             instance_id=instance_id,
@@ -169,6 +199,18 @@ class HeartbeatRegistry:
 
         if not was_online:
             logger.info("heartbeat_instance_online", instance_id=instance_id)
+            itype = self._instance_types.get(instance_id, "")
+            await self._persist_hb_event(
+                HB_INSTANCE_CONNECTED,
+                instance_id,
+                {
+                    "instance_type": itype,
+                    "name": data.get("name", instance_id),
+                    "version": data.get("version", ""),
+                    "brain_url": data.get("brain_url", ""),
+                    "worker_count": data.get("worker_count", 0),
+                },
+            )
 
         await self._broadcaster.broadcast({"type": "heartbeat_update", "instance_id": instance_id})
 
@@ -233,6 +275,17 @@ class HeartbeatRegistry:
             if registered is not ws:
                 return
         self._websockets.pop(instance_id, None)
+
+        # Persist disconnect event (guard against double-persist with offline checker)
+        if instance_id not in self._disconnect_persisted:
+            self._disconnect_persisted.add(instance_id)
+            itype = self._instance_types.get(instance_id, "")
+            await self._persist_hb_event(
+                HB_INSTANCE_DISCONNECTED,
+                instance_id,
+                {"instance_type": itype, "reason": "disconnect"},
+            )
+
         logger.info("heartbeat_disconnected", instance_id=instance_id)
 
         # Cancel any pending commands for this instance
@@ -382,6 +435,16 @@ class HeartbeatRegistry:
                     count=len(newly_offline),
                     instance_ids=newly_offline,
                 )
+                # Persist disconnect events for offline instances
+                for iid in newly_offline:
+                    if iid not in self._disconnect_persisted:
+                        self._disconnect_persisted.add(iid)
+                        itype = self._instance_types.get(iid, "")
+                        await self._persist_hb_event(
+                            HB_INSTANCE_DISCONNECTED,
+                            iid,
+                            {"instance_type": itype, "reason": "heartbeat_timeout"},
+                        )
                 await self._broadcaster.broadcast(
                     {"type": "heartbeat_update", "offline": newly_offline}
                 )
