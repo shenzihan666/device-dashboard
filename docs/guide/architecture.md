@@ -46,7 +46,7 @@ HTTP/WebSocket interface:
 ## Data Flow
 
 ```
-WebSocket /ws/heartbeat → heartbeat_registry → broadcast
+WebSocket /ws/heartbeat → enrich empty brain `ip` from peer / X-Forwarded-For → heartbeat_registry → heartbeat_edges + broadcast
 File upload → parser.parse_row() → Event dataclass
     → EventRepository.insert() → SQLite (via SQLAlchemy)
     → EntityRepository.upsert()

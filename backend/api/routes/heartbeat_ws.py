@@ -12,10 +12,42 @@ logger = structlog.get_logger(__name__)
 router = APIRouter(tags=["heartbeat"])
 
 
+def _peer_ip(ws: WebSocket) -> str:
+    """Best-effort source IP for the WebSocket peer.
+
+    Honours ``X-Forwarded-For`` / ``X-Real-IP`` so the dashboard still works
+    behind a reverse proxy or load balancer.
+    """
+    headers = ws.headers
+    xff = headers.get("x-forwarded-for") or headers.get("x-real-ip")
+    if xff:
+        return xff.split(",")[0].strip()
+    if ws.client and ws.client.host:
+        return ws.client.host
+    return ""
+
+
+def _enrich_with_peer_ip(data: dict, peer_ip: str) -> None:
+    """Fill an empty ``ip`` field on a heartbeat payload with the peer's IP.
+
+    Brain servers do not always know their own externally-reachable address.
+    The dashboard sees the brain over a WebSocket and can therefore record
+    where the connection actually originated. This is what later lets
+    ``_match_brain_url`` connect a WeCom client whose ``brain_url`` is the
+    brain's public IP to the brain_server node (whose ``instance_id`` is the
+    cloud hostname, not the public IP).
+    """
+    if not peer_ip:
+        return
+    if not data.get("ip"):
+        data["ip"] = peer_ip
+
+
 @router.websocket("/ws/heartbeat")
 async def websocket_heartbeat(ws: WebSocket) -> None:
     await ws.accept()
     registry = ws.app.state.heartbeat_registry
+    peer_ip = _peer_ip(ws)
 
     instance_id: str | None = None
     accepted = False
@@ -47,6 +79,7 @@ async def websocket_heartbeat(ws: WebSocket) -> None:
         await ws.send_text(json.dumps({"type": "welcome", "instance_id": instance_id}))
 
         # Process the first heartbeat
+        _enrich_with_peer_ip(data, peer_ip)
         await registry.on_heartbeat(instance_id, data)
         await ws.send_text(json.dumps({"type": "ack"}))
 
@@ -63,6 +96,7 @@ async def websocket_heartbeat(ws: WebSocket) -> None:
             if msg_type == "event":
                 await registry.on_event(instance_id, data)
             elif msg_type == "heartbeat":
+                _enrich_with_peer_ip(data, peer_ip)
                 await registry.on_heartbeat(instance_id, data)
             elif msg_type == "command_result":
                 registry.on_command_result(data)

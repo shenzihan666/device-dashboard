@@ -79,7 +79,7 @@ export default function App() {
         )}
 
         {currentPage === 'canvas' && (
-          <div className="grid grid-rows-[56px_1fr_80px] grid-cols-[1fr_340px]"
+          <div className="grid grid-rows-[56px_1fr_80px] grid-cols-[1fr_340px] min-h-0 h-full"
             style={{ gridTemplateAreas: '"topbar topbar" "graph feed" "timeline timeline"' }}>
             <header className="flex items-center gap-4 px-5 bg-white border-b border-geist-border z-10"
               style={{ gridArea: 'topbar' }}>

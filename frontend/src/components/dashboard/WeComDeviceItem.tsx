@@ -59,7 +59,7 @@ export default function WeComDeviceItem({ device, instanceId, online, onViewLogs
           {device.name || device.serial}
         </span>
         <button
-          onClick={(e) => { e.stopPropagation(); onViewLogs?.(device.serial, device.name || device.serial); }}
+          onClick={(e) => { e.stopPropagation(); onViewLogs?.(instanceId ?? device.serial, device.name || device.serial); }}
           className="p-1 rounded hover:bg-blue-100 text-gray-400 hover:text-blue-500 transition-colors"
           title="View log files"
         >

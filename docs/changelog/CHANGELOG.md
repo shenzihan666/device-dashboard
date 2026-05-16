@@ -13,9 +13,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - WeCom client event processing: `/ws/heartbeat` accepts `event` type messages (not just `heartbeat`), persists to DB and broadcasts via WebSocket.
 - WeCom device nodes: canvas nodes for individual WeCom devices (serial number last 6 chars as label), with running/idle status.
 - WeCom event display: EventFeed renders `wecom_device_launched`, `wecom_device_stopped`, `wecom_ai_request`, `wecom_red_dot_update`, `wecom_followup_started`, `wecom_followup_progress`, `wecom_followup_result`, `wecom_followup_finished`.
+- Unit tests for brain URL matching and heartbeat peer-IP enrichment (`tests/unit/test_heartbeat_matching.py`).
 
 ### Fixed
 
+- Canvas **wecom_client → brain_server** edges when clients report `brain_url` with the brain's public IP but the brain heartbeat uses a cloud hostname and omits `ip`: `/ws/heartbeat` enriches payloads with the WebSocket peer IP (honours `X-Forwarded-For` / `X-Real-IP` behind a reverse proxy) so `heartbeat_edges` can match via `_match_brain_url`.
+- Canvas page layout: `min-h-0 h-full` on the canvas grid so the React Flow graph area gets a bounded height and nodes render instead of collapsing to zero height.
+- Dashboard device log viewer: "View log files" passes the WeCom client `instance_id` (not device serial) to the log API.
 - Dashboard and Settings pages: the grid `1fr` content row uses `min-h-0` (and a clipping wrapper) so the inner `h-full overflow-y-auto` region gets a bounded height and long card lists scroll instead of growing past the viewport.
 - WebSocket `/ws/live` handler uses `ws.app.state` for the broadcaster (avoids relying on `Request` injection on the websocket route).
 - Graph canvas in **Edit** mode: wire `onNodesChange` / `onEdgesChange` with `useNodesState` / `useEdgesState` so nodes move smoothly while dragging instead of only after mouse-up.
