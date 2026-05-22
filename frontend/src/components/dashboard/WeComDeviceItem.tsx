@@ -46,10 +46,10 @@ export default function WeComDeviceItem({ device, instanceId, online, onViewLogs
 
   return (
     <div className={`
-      p-3 rounded-lg border transition-all
+      p-3.5 rounded-xl border transition-all duration-300 ease-in-out transform hover:-translate-y-0.5
       ${isRunning
-        ? 'bg-white border-blue-100 shadow-sm'
-        : 'bg-gray-50 border-gray-100'
+        ? 'bg-white border-blue-200/80 shadow-[0_2px_8px_rgba(37,99,235,0.04)] hover:shadow-md hover:border-blue-300'
+        : 'bg-gray-50/80 border-gray-100 shadow-sm hover:bg-white hover:border-gray-200 hover:shadow-md'
       }
     `}>
       {/* Header */}
