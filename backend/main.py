@@ -16,6 +16,7 @@ from backend.api.routes import all_routers
 from backend.config import get_settings
 from backend.core.services.app_settings import AppSettingsState, load_effective
 from backend.core.services.heartbeat_registry import HeartbeatRegistry
+from backend.core.services.retention_sweeper import RetentionSweeper
 from backend.core.services.state_projector import StateProjector
 from backend.infrastructure.database.models import Base
 from backend.infrastructure.database.repositories.settings_repo import (
@@ -110,8 +111,13 @@ async def lifespan(app: FastAPI):
 
     await heartbeat_manager.apply(app_settings)
 
+    retention_sweeper = RetentionSweeper(settings)
+    retention_sweeper.start()
+    app.state.retention_sweeper = retention_sweeper
+
     yield
 
+    await retention_sweeper.stop()
     await heartbeat_manager.shutdown()
 
 

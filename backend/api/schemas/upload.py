@@ -56,3 +56,22 @@ class FileContentResponse(BaseModel):
     total_lines: int
     lines: list[str]
     truncated: bool
+
+
+class IdentityUsage(BaseModel):
+    identity: str
+    used_bytes: int
+    used_mb: float
+    quota_bytes: int
+    quota_mb: float
+    usage_pct: float
+
+
+class StorageStatsResponse(BaseModel):
+    disk_usage_pct: float
+    disk_watermark_pct: int
+    disk_emergency_pct: int
+    retention_days: int
+    dedup_enabled: bool
+    sweeper_interval_min: int
+    identities: list[IdentityUsage]

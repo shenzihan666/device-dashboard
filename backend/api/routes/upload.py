@@ -3,6 +3,7 @@
 Provides endpoints for uploading files from various sources including:
 - General file upload endpoint
 - Android-compatible endpoint
+- Storage stats / health endpoint
 
 All endpoints provide detailed industrial-grade logging.
 """
@@ -12,7 +13,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 import structlog
-from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
+from fastapi import APIRouter, File, Form, Header, HTTPException, Query, UploadFile
 
 from backend.api.dependencies import SettingsDep
 from backend.api.schemas.common import APIResponse
@@ -20,6 +21,8 @@ from backend.api.schemas.upload import (
     DeviceFileInfo,
     DeviceFilesListResponse,
     FileContentResponse,
+    IdentityUsage,
+    StorageStatsResponse,
     UploadResponse,
 )
 from backend.core.services.file_reader import (
@@ -31,6 +34,12 @@ from backend.core.services.file_reader import (
     resolve_file_id,
 )
 from backend.core.services.file_storage import FileStorageService, _sanitize_segment
+from backend.core.services.upload_quota import (
+    DiskWatermarkExceeded,
+    QuotaExceeded,
+    get_disk_usage_pct,
+    get_identity_usage_bytes,
+)
 
 logger = structlog.get_logger(__name__)
 
@@ -43,14 +52,7 @@ def _now_utc() -> datetime:
 
 
 def _parse_uploaded_at(uploaded_at_str: str | None) -> datetime:
-    """Parse uploaded_at timestamp string.
-
-    Args:
-        uploaded_at_str: ISO format timestamp string, or None
-
-    Returns:
-        Parsed datetime in UTC, or current time if None/invalid
-    """
+    """Parse uploaded_at timestamp string."""
     if not uploaded_at_str:
         return _now_utc()
 
@@ -73,6 +75,13 @@ def _parse_uploaded_at(uploaded_at_str: str | None) -> datetime:
         return _now_utc()
 
 
+def _is_client_gzipped(content_encoding: str | None) -> bool:
+    """Check if the client sent gzipped content."""
+    if not content_encoding:
+        return False
+    return "gzip" in content_encoding.lower()
+
+
 @router.post("/upload", response_model=APIResponse[UploadResponse])
 async def upload_file(
     settings: SettingsDep,
@@ -82,27 +91,9 @@ async def upload_file(
     hostname: str = Form(""),
     person_name: str = Form(""),
     uploaded_at: str = Form(""),
+    content_encoding: str | None = Header(None),
 ) -> APIResponse[UploadResponse]:
-    """Upload a file to the server.
-
-    Files are stored in a structured directory format and
-    detailed structured logs are emitted for monitoring.
-
-    Args:
-        settings: Application settings
-        file: The uploaded file
-        upload_kind: Type of upload (e.g., "runtime-log", "metrics-jsonl")
-        device_id: Optional device identifier
-        hostname: Optional hostname identifier
-        person_name: Optional person identifier
-        uploaded_at: Optional ISO format timestamp of upload
-
-    Returns:
-        Upload response with metadata
-
-    Raises:
-        HTTPException: If upload fails
-    """
+    """Upload a file to the server."""
     request_logger = logger.bind(
         endpoint="/api/upload",
         client_provided_filename=file.filename,
@@ -122,6 +113,7 @@ async def upload_file(
             device_id=device_id or None,
             hostname=hostname or None,
             person_name=person_name or None,
+            client_gzipped=_is_client_gzipped(content_encoding),
         )
 
         return APIResponse(
@@ -136,6 +128,12 @@ async def upload_file(
             )
         )
 
+    except QuotaExceeded as e:
+        request_logger.warning("upload_rejected_quota", error=str(e))
+        raise HTTPException(status_code=413, detail=str(e)) from e
+    except DiskWatermarkExceeded as e:
+        request_logger.warning("upload_rejected_watermark", error=str(e))
+        raise HTTPException(status_code=507, detail=str(e)) from e
     except ValueError as e:
         request_logger.error("upload_validation_failed", error=str(e))
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -154,27 +152,12 @@ async def upload_android_logs(
     upload_kind: str = Form(...),
     checksum: str = Form(""),
     uploaded_at: str = Form(...),
+    content_encoding: str | None = Header(None),
 ) -> APIResponse[UploadResponse]:
     """Upload endpoint compatible with Android devices.
 
-    This endpoint matches the format used in the Analytics-Platform project,
-    but without the X-Upload-Token authentication requirement.
-
-    Args:
-        settings: Application settings
-        file: The uploaded file
-        device_id: Device identifier (required)
-        hostname: Hostname (required)
-        person_name: Optional person identifier
-        upload_kind: Type of upload (required)
-        checksum: Optional file checksum
-        uploaded_at: ISO format timestamp of upload (required)
-
-    Returns:
-        Upload response with metadata
-
-    Raises:
-        HTTPException: If upload fails
+    Supports ``Content-Encoding: gzip`` — when set the server stores the
+    payload as-is without double-compressing.
     """
     request_logger = logger.bind(
         endpoint="/api/android-logs/upload",
@@ -198,9 +181,9 @@ async def upload_android_logs(
             device_id=device_id,
             hostname=hostname,
             person_name=person_name or None,
+            client_gzipped=_is_client_gzipped(content_encoding),
         )
 
-        # Log client-provided checksum for comparison
         if checksum and checksum.strip():
             request_logger.info(
                 "android_upload_checksum_received",
@@ -223,6 +206,12 @@ async def upload_android_logs(
             )
         )
 
+    except QuotaExceeded as e:
+        request_logger.warning("upload_rejected_quota", error=str(e))
+        raise HTTPException(status_code=413, detail=str(e)) from e
+    except DiskWatermarkExceeded as e:
+        request_logger.warning("upload_rejected_watermark", error=str(e))
+        raise HTTPException(status_code=507, detail=str(e)) from e
     except ValueError as e:
         request_logger.error("android_upload_validation_failed", error=str(e))
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -233,17 +222,64 @@ async def upload_android_logs(
 
 @router.get("/uploads-test")
 async def uploads_test(settings: SettingsDep) -> dict[str, str]:
-    """Simple test endpoint to verify upload configuration.
-
-    Returns:
-        Configuration info
-    """
+    """Simple test endpoint to verify upload configuration."""
     return {
         "upload_dir": str(settings.upload_dir),
         "upload_dir_exists": str(settings.upload_dir.exists()),
         "allowed_extensions": ", ".join(settings.upload_allowed_extensions),
         "max_size_mb": str(settings.upload_max_size_mb),
     }
+
+
+@router.get("/uploads/storage-stats", response_model=APIResponse[StorageStatsResponse])
+async def storage_stats(settings: SettingsDep) -> APIResponse[StorageStatsResponse]:
+    """Return disk usage, per-identity quotas, and retention configuration."""
+    upload_dir = settings.upload_dir
+    target = upload_dir if upload_dir.exists() else upload_dir.parent
+    disk_pct = get_disk_usage_pct(target)
+
+    quota_bytes = settings.upload_quota_per_identity_gb * 1024 * 1024 * 1024
+    quota_mb = round(quota_bytes / (1024 * 1024), 2)
+
+    identities: list[IdentityUsage] = []
+    if upload_dir.exists():
+        seen: set[str] = set()
+        for source_dir in upload_dir.iterdir():
+            if not source_dir.is_dir() or source_dir.name.startswith("."):
+                continue
+            for identity_dir in source_dir.iterdir():
+                if not identity_dir.is_dir():
+                    continue
+                ident = identity_dir.name
+                if ident in seen:
+                    continue
+                seen.add(ident)
+                used = get_identity_usage_bytes(upload_dir, ident)
+                used_mb = round(used / (1024 * 1024), 2)
+                identities.append(
+                    IdentityUsage(
+                        identity=ident,
+                        used_bytes=used,
+                        used_mb=used_mb,
+                        quota_bytes=quota_bytes,
+                        quota_mb=quota_mb,
+                        usage_pct=round((used / quota_bytes) * 100, 2) if quota_bytes else 0,
+                    )
+                )
+
+    identities.sort(key=lambda x: x.used_bytes, reverse=True)
+
+    return APIResponse(
+        data=StorageStatsResponse(
+            disk_usage_pct=disk_pct,
+            disk_watermark_pct=settings.upload_disk_watermark_pct,
+            disk_emergency_pct=settings.upload_disk_emergency_pct,
+            retention_days=settings.upload_retention_days,
+            dedup_enabled=settings.upload_dedup_enabled,
+            sweeper_interval_min=settings.upload_sweeper_interval_min,
+            identities=identities,
+        )
+    )
 
 
 @router.get("/uploads/{device_id}", response_model=APIResponse[DeviceFilesListResponse])
@@ -281,7 +317,6 @@ async def list_device_files(
             date_segment = parts[1] if len(parts) >= 3 else ""
             name_part = parts[-1] if parts else f.name
 
-            # Try to parse date+time from directory structure
             uploaded_at = _now_utc()
             try:
                 from datetime import datetime as _dt
@@ -294,7 +329,6 @@ async def list_device_files(
             except (ValueError, IndexError):
                 pass
 
-            # Strip HHMMSS- prefix for display filename
             display_name = name_part
             if (
                 "-" in name_part
@@ -340,7 +374,6 @@ async def get_file_content(
     if file_path is None:
         raise HTTPException(status_code=404, detail="File not found")
 
-    # Binary files cannot be viewed as text
     ext = file_path.suffix.lower()
     if ext not in TEXT_EXTENSIONS:
         return APIResponse(
@@ -357,7 +390,6 @@ async def get_file_content(
 
     lines, total_lines = read_line_range(file_path, offset=offset, limit=limit)
 
-    # Use stripped display name
     display_name = file_path.name
     if (
         "-" in display_name

@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Upload retention and disk governance: 30-day TTL sweeper (`RetentionSweeper`), per-identity quota (default 5 GB), disk watermark rejection (85% → HTTP 507), emergency sweep at 95%.
+- Content-addressable upload storage (`.blobs/{sha[:2]}/{sha}`) with hardlink-based deduplication; server-side gzip for `.log` / `.jsonl` on ingest; `Content-Encoding: gzip` passthrough from clients.
+- `GET /api/uploads/storage-stats` — disk usage %, per-identity quota usage, retention and sweeper configuration.
 - File upload endpoints: `POST /api/upload` (manual) and `POST /api/android-logs/upload` (Android-compatible) with industrial-grade structured logging, no authentication required.
 - File storage service: structured directory layout (`uploads/{source}/{identity}/{kind}/{date}/{time}-{file}`), SHA256 checksums, size/extension validation.
 - WeCom client event processing: `/ws/heartbeat` accepts `event` type messages (not just `heartbeat`), persists to DB and broadcasts via WebSocket.

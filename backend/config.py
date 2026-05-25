@@ -45,6 +45,15 @@ class Settings(BaseSettings):
     upload_allowed_extensions: list[str] = [".db", ".jsonl", ".log", ".xlsx", ".xls"]
     upload_max_size_mb: int = 100  # 100 MB max file size
 
+    # Upload retention & quota
+    upload_retention_days: int = 30
+    upload_quota_per_identity_gb: int = 5
+    upload_disk_watermark_pct: int = 85
+    upload_disk_emergency_pct: int = 95
+    upload_compress_kinds: list[str] = [".log", ".jsonl"]
+    upload_dedup_enabled: bool = True
+    upload_sweeper_interval_min: int = 60
+
 
 @lru_cache
 def get_settings() -> Settings:

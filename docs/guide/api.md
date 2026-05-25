@@ -33,6 +33,13 @@ Errors return `success: false` with `error` and `error_code` (and HTTP 4xx/5xx a
 | GET | `/api/layout` | Saved positions: `data.positions` as `[{ node_id, x, y }]` |
 | PUT | `/api/layout` | Body `{ "positions": [{ "node_id", "x", "y" }, ...] }` (at least one position) |
 | DELETE | `/api/layout` | Clear saved positions (revert to auto-layout on next load) |
+| POST | `/api/upload` | Manual file upload (`multipart/form-data`; optional `Content-Encoding: gzip`) |
+| POST | `/api/android-logs/upload` | WeCom desktop log upload (same storage pipeline as `/api/upload`) |
+| GET | `/api/uploads/storage-stats` | Disk %, per-identity usage vs quota, retention and sweeper settings |
+| GET | `/api/uploads/{device_id}` | List uploaded files for an identity |
+| GET | `/api/uploads/{device_id}/{file_id}/content` | Paginated text preview of an uploaded file |
+
+Upload failures: HTTP **413** when per-identity quota is exceeded; HTTP **507** when disk watermark is exceeded.
 
 ## WebSocket
 
