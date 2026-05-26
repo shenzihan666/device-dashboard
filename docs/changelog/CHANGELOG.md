@@ -38,6 +38,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Dashboard **WeCom Clients** section: client cards use the same responsive two-column grid as **AI Brain** (`md:grid-cols-2`) instead of a vertical stack; nested device tiles cap at three columns (`lg:grid-cols-3`) so layout stays readable when client cards are half-width.
 - **Breaking:** REST responses are wrapped in `{ success, data, error, error_code, meta }`; `PUT /api/layout` expects `{ "positions": [...] }` instead of a bare JSON array.
 - Frontend `src/services/api.ts` unwraps the envelope for all dashboard API calls.
 - Deployment runbook (`docs/runbooks/deployment.md`): optional Alembic step and curl checks updated for the response envelope.

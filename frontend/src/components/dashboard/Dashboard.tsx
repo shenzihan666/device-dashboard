@@ -60,7 +60,7 @@ export default function Dashboard({ snapshot }: DashboardProps) {
           </div>
 
           {hasWeComClients ? (
-            <div className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
               {snapshot.wecom_clients.map((client) => (
                 <WeComClientCard key={client.instance_id} state={client}
                   onViewLogs={(id, name) => setLogsDevice({ id, name })} />
